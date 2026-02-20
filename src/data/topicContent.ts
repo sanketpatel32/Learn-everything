@@ -86,6 +86,30 @@ import { consistentHashing } from './topics/consistent-hashing';
 import { distributedLocks } from './topics/distributed-locks';
 import { vectorDb } from './topics/vector-db';
 
+import { slidingWindowVariants } from './topics/sliding-window-variants';
+import { treePathVariants } from './topics/tree-path-variants';
+import { binarySearchVariants } from './topics/binary-search-variants';
+import { dpGridVariants } from './topics/dp-grid-variants';
+import { graphCycleVariants } from './topics/graph-cycle-variants';
+
+import { llTwoPtrVariants } from './topics/ll-twoptr-variants';
+import { advancedStackVariants } from './topics/advanced-stack-variants';
+import { bstPropertyVariants } from './topics/bst-property-variants';
+import { twoHeapsVariants } from './topics/two-heaps-variants';
+import { dpStringVariants } from './topics/dp-string-variants';
+
+import { sdConsensus } from './topics/sd-consensus';
+import { sdApiDesign } from './topics/sd-api-design';
+import { sdCloudArch } from './topics/sd-cloud-arch';
+import { sdBlobStorage } from './topics/sd-blob-storage';
+import { sdGeoSpatial } from './topics/sd-geo-spatial';
+
+import { exLocationBased } from './topics/ex-location-based';
+import { exWebCrawler } from './topics/ex-web-crawler';
+import { exLeaderboard } from './topics/ex-leaderboard';
+import { exFlashSale } from './topics/ex-flash-sale';
+import { exGoogleDocs } from './topics/ex-google-docs';
+
 export type TopicContent = {
   title: string;
   description: string;
@@ -211,4 +235,26 @@ export const topicContent: Record<string, TopicContent> = {
   'ex_rate_limiter': rateLimiter,
   'ex_google_drive': googleDrive,
   'ex_typeahead': typeahead,
+  'dsa_slidewin_variants': slidingWindowVariants,
+  'dsa_tree_path_variants': treePathVariants,
+  'dsa_bs_variants': binarySearchVariants,
+  'dsa_dp_grid_variants': dpGridVariants,
+  'dsa_graph_cycle_variants': graphCycleVariants,
+  'dsa_ll_twoptr_variants': llTwoPtrVariants,
+  'dsa_stacks_variants': advancedStackVariants,
+  'dsa_bst_variants': bstPropertyVariants,
+  'dsa_heap_variants': twoHeapsVariants,
+  'dsa_dp_string_variants': dpStringVariants,
+
+  'sd_consensus': sdConsensus,
+  'sd_api_design': sdApiDesign,
+  'sd_cloud_arch': sdCloudArch,
+  'sd_blob_storage': sdBlobStorage,
+  'sd_geo_spatial': sdGeoSpatial,
+
+  'ex_location_based': exLocationBased,
+  'ex_web_crawler': exWebCrawler,
+  'ex_leaderboard': exLeaderboard,
+  'ex_flash_sale': exFlashSale,
+  'ex_google_docs': exGoogleDocs,
 };

@@ -20,6 +20,7 @@ export const dsaRoadmap: RoadmapItem = {
           label: 'Arrays & Strings',
           children: [
             { id: 'dsa_slidewin', label: 'Sliding Window' },
+            { id: 'dsa_slidewin_variants', label: 'Sliding Window Variants' },
             { id: 'dsa_twoptr', label: 'Two Pointers' },
             { id: 'dsa_prefix', label: 'Prefix Sum' },
             { id: 'dsa_matrix', label: 'Matrix Manipulation' },
@@ -33,6 +34,7 @@ export const dsaRoadmap: RoadmapItem = {
             { id: 'dsa_ll_rev', label: 'Reversal Patterns' },
             { id: 'dsa_ll_cycle', label: 'Cycle Detection (Floyd)' },
             { id: 'dsa_ll_merge', label: 'In-place Merge' },
+            { id: 'dsa_ll_twoptr_variants', label: 'Fast & Slow Pointer Variants' },
             { id: 'dsa_ll_rand', label: 'Copy List with Random Pointer' },
           ],
         },
@@ -41,6 +43,7 @@ export const dsaRoadmap: RoadmapItem = {
           label: 'Stacks & Queues',
           children: [
             { id: 'dsa_mono', label: 'Monotonic Stack / Queue' },
+            { id: 'dsa_stacks_variants', label: 'Advanced Stack Patterns' },
             { id: 'dsa_lru', label: 'LRU & LFU Cache Design' },
             { id: 'dsa_circular', label: 'Circular Queue Implementation' },
           ],
@@ -65,7 +68,9 @@ export const dsaRoadmap: RoadmapItem = {
           label: 'Trees & BST',
           children: [
             { id: 'dsa_trees_trav', label: 'Recursive & Iterative Traversals' },
+            { id: 'dsa_tree_path_variants', label: 'Tree Path Patterns' },
             { id: 'dsa_trees_lca', label: 'Lowest Common Ancestor' },
+            { id: 'dsa_bst_variants', label: 'BST Property Variants' },
             { id: 'dsa_trees_serialize', label: 'Serialization / Deserialization' },
             { id: 'dsa_trees_view', label: 'Side Views (Left/Right/Top)' },
           ],
@@ -86,6 +91,7 @@ export const dsaRoadmap: RoadmapItem = {
           children: [
             { id: 'dsa_heap_k', label: 'Top K Elements' },
             { id: 'dsa_heap_median', label: 'Median in a Stream' },
+            { id: 'dsa_heap_variants', label: 'Two Heaps Pattern' },
           ],
         },
       ],
@@ -99,6 +105,7 @@ export const dsaRoadmap: RoadmapItem = {
           label: 'Searching & Sorting',
           children: [
             { id: 'dsa_binsearch_ans', label: 'Binary Search on Answer' },
+            { id: 'dsa_bs_variants', label: 'Binary Search Variants' },
             { id: 'dsa_sorting_custom', label: 'Custom Comparators' },
             { id: 'dsa_quickselect', label: 'QuickSelect Algorithm' },
           ],
@@ -118,6 +125,8 @@ export const dsaRoadmap: RoadmapItem = {
           label: 'Dynamic Programming',
           children: [
             { id: 'dsa_dp_knap', label: 'Knapsack Variants' },
+            { id: 'dsa_dp_grid_variants', label: 'Grid DP Variants' },
+            { id: 'dsa_dp_string_variants', label: 'String DP Variants' },
             { id: 'dsa_dp_lcs', label: 'LCS / LIS Patterns' },
             { id: 'dsa_dp_bitmask', label: 'Bitmask DP' },
             { id: 'dsa_dp_tree', label: 'DP on Trees' },
@@ -129,6 +138,7 @@ export const dsaRoadmap: RoadmapItem = {
           label: 'Graphs',
           children: [
             { id: 'dsa_graph_trav', label: 'BFS & DFS Patterns' },
+            { id: 'dsa_graph_cycle_variants', label: 'Graph Cycle Detection Variants' },
             { id: 'dsa_topo', label: 'Topological Sort / Kahn\'s' },
             { id: 'dsa_graph_short', label: 'Shortest Paths (Dijkstra, Bellman-Ford)' },
             { id: 'dsa_graph_scc', label: 'Strongly Connected (Tarjan/Kosaraju)' },
@@ -157,6 +167,7 @@ export const systemDesignRoadmap: RoadmapItem = {
             { id: 'sd_lb_strat', label: 'Load Balancing (L4 vs L7)' },
             { id: 'sd_shard', label: 'Database Sharding & Partitioning' },
             { id: 'sd_consistency_models', label: 'Strong vs Eventual Consistency' },
+            { id: 'sd_consensus', label: 'Distributed Consensus (Paxos/Raft)' },
           ],
         },
         {
@@ -181,10 +192,12 @@ export const systemDesignRoadmap: RoadmapItem = {
           children: [
             { id: 'sd_sql_nosql', label: 'SQL, NoSQL, & NewSQL' },
             { id: 'sd_index_types', label: 'BTrees, LSM Trees, & Hashing' },
+            { id: 'sd_geo_spatial', label: 'Geospatial Indexing (Quadtrees)' },
             { id: 'sd_replication', label: 'Replication (Leader-Follower, Multi-leader)' },
             { id: 'sd_consistent_hashing', label: 'Consistent Hashing & Data Distribution' },
             { id: 'sd_distributed_locks', label: 'Distributed Locks (ZooKeeper/Redis)' },
             { id: 'sd_vector_db', label: 'Vector Databases & RAG Architecture' },
+            { id: 'sd_blob_storage', label: 'Object Storage (S3/Blob)' },
           ],
         },
         {
@@ -217,6 +230,8 @@ export const systemDesignRoadmap: RoadmapItem = {
             { id: 'sd_apigw_patterns', label: 'API Gateway & BFF' },
             { id: 'sd_service_mesh', label: 'Service Mesh (Istio/Linkerd)' },
             { id: 'sd_outbox', label: 'Transactional Outbox Pattern' },
+            { id: 'sd_api_design', label: 'API Paradigms (REST/GraphQL/gRPC)' },
+            { id: 'sd_cloud_arch', label: 'Compute Models (Serverless/Containers)' },
           ],
         },
         {
@@ -256,6 +271,7 @@ export const examplesRoadmap: RoadmapItem = {
           children: [
             { id: 'ex_whatsapp', label: 'Design WhatsApp (Chat System)' },
             { id: 'ex_discord', label: 'Design Discord (Group Chat / Presence)' },
+            { id: 'ex_google_docs', label: 'Design Google Docs (Collab. Editing)' },
           ],
         },
         {
@@ -292,6 +308,7 @@ export const examplesRoadmap: RoadmapItem = {
           children: [
             { id: 'ex_amazon', label: 'Design Amazon (E-commerce Checkout/Cart)' },
             { id: 'ex_uber', label: 'Design Uber (Ride Dispatch & Tracking)' },
+            { id: 'ex_flash_sale', label: 'Design a Flash Sale System' },
           ],
         },
         {
@@ -315,6 +332,8 @@ export const examplesRoadmap: RoadmapItem = {
             { id: 'ex_tinyurl', label: 'Design TinyURL (URL Shortener)' },
             { id: 'ex_pastebin', label: 'Design Pastebin' },
             { id: 'ex_rate_limiter', label: 'Design a Distributed Rate Limiter' },
+            { id: 'ex_web_crawler', label: 'Design a Distributed Web Crawler' },
+            { id: 'ex_leaderboard', label: 'Design a Real-time Leaderboard' },
           ],
         },
         {
@@ -323,6 +342,7 @@ export const examplesRoadmap: RoadmapItem = {
           children: [
             { id: 'ex_google_drive', label: 'Design Google Drive (File Storage)' },
             { id: 'ex_typeahead', label: 'Design Search Typeahead' },
+            { id: 'ex_location_based', label: 'Design Yelp / Proximity Service' },
           ],
         },
       ],
