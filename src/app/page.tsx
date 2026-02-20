@@ -26,9 +26,36 @@ export default function Home() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="flex flex-col items-center gap-4"
         >
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-500/5 rounded-3xl p-3 sm:p-4 border border-indigo-500/10 backdrop-blur-xl relative">
-            <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full opacity-50" />
-            <Logo className="w-full h-full relative z-10" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-500/10 rounded-3xl p-3 sm:p-4 border border-indigo-500/20 backdrop-blur-2xl relative flex items-center justify-center">
+            <div className="absolute inset-0 bg-indigo-500/30 blur-2xl rounded-full opacity-40 animate-pulse" />
+            <svg
+              viewBox="0 0 100 100"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-full h-full relative z-10 drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]"
+            >
+              <defs>
+                <linearGradient id="logo-grad-fixed" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#a855f7" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M20 50 L40 30 L60 70 L80 50"
+                stroke="url(#logo-grad-fixed)"
+                strokeWidth="10"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="20" cy="50" r="7" fill="#6366f1" />
+              <circle cx="40" cy="30" r="7" fill="#6366f1" />
+              <circle cx="60" cy="70" r="7" fill="#a855f7" />
+              <circle cx="80" cy="50" r="7" fill="#a855f7" />
+              <circle cx="50" cy="20" r="5" fill="#6366f1">
+                <animate attributeName="cy" values="20;30;20" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" />
+              </circle>
+            </svg>
           </div>
         </motion.div>
 
