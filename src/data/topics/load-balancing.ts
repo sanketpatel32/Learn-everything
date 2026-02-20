@@ -94,23 +94,29 @@ export const loadBalancing: TopicContent = {
       description: 'Layer 7 LBs operate at the highest level of the OSI model. They fully decipher the network traffic (HTTP/HTTPS, WebSockets). This allows them to make "Intelligent Routing" decisions. For example, if the path is `/api/video`, route to the video microservice; if the path is `/api/auth`, route to the authentication pool. The LB actively terminates the client\'s TCP bridge, reads the payload, and then manages a *separate* TCP bridge to the backend server.'
     },
     {
-      title: 'Health Checks & Algorithms',
-      description: 'To route effectively, LBs must ensure a server is alive via Health Checks (pinging an endpoint). When servers are healthy, LBs use algorithms like **Round Robin** (sequential distribution), **Least Connections** (sending traffic to the least busy server), or **IP Hashing** (ensuring a specific client IP always hits the same server to maintain session state).'
+      title: 'Health Checks & Failover',
+      description: 'To route effectively, LBs must ensure a server is alive via Health Checks. **Active Health Checks** involve the LB sending periodic requests (e.g., HTTP GET /health) to each server. **Passive Health Checks** monitor live traffic for errors (e.g., observing consecutive 5xx errors). If a server fails, the LB automatically removes it from the rotation and redirects traffic to healthy nodes, ensuring high availability.'
+    },
+    {
+      title: 'Session Persistence (Sticky Sessions)',
+      description: 'Standard load balancing is stateless. However, if a server stores local session data (non-distributed cache), the LB must use **Sticky Sessions** (Affinity). This is achieved via **IP Hashing** or **Cookies**. A major downside is that it prevents perfect even distribution (hotspotting) and makes scaling difficult. At Layer 7, the LB often inserts an `X-Forwarded-For` header so the backend knows the actual client IP despite the LB proxying the request.'
     }
   ],
   comparisonTable: {
-    headers: ['Feature', 'Layer 4', 'Layer 7'],
+    headers: ['Feature', 'Layer 4 (Fast/Dumb)', 'Layer 7 (Smart/Detailed)'],
     rows: [
       ['Routing Intelligence', 'Dumb: Routes by IP & Port only', 'Smart: Routes by URL, Cookie, Header'],
       ['Performance (Speed)', 'Extremely High (Packet forwarding)', 'Slower (Terminates TLS, inspects packet)'],
       ['Microservices Support', 'Poor (Treats all servers equally)', 'Excellent (Can route to specific domains/paths)'],
       ['Caching & Compression', 'Not possible', 'Supported (can cache API responses)'],
-      ['TLS/SSL Termination', 'Client talks directly to server', 'LB decrypts traffic (reduces CPU load on servers)']
+      ['TLS/SSL Termination', 'Client talks directly to server', 'LB decrypts traffic (reduces CPU load on servers)'],
+      ['Session Persistence', 'Via IP Hashing', 'Via Cookies or Custom Headers']
     ]
   },
   pitfalls: [
     'Assuming L7 load balancers are always better. Hardware L4 balancers can handle millions of connections per second and are essential for extreme DDoS protection.',
     'Forgetting that L7 Load Balancers become single points of failure that require high CPU availability to decrypt TLS (SSL Offloading).',
-    'Using Round-Robin when backend servers have drastically varying response times or computational capabilities (use Least Connections instead).'
+    'Using Round-Robin when backend servers have drastically varying response times or computational capabilities (use Least Connections instead).',
+    'Not accounting for "Thundering Herd" if an LB recovers or a new server is added; health check intervals must be carefully tuned to prevent overwhelming a newly joined node.'
   ]
 };

@@ -39,33 +39,79 @@ export const lcsLisPatterns: TopicContent = {
       }
     }
   ],
-  pitfalls: [
-    'Confusing subsequence with substring changes transitions entirely.',
-    'LIS `tails` array does not store the actual LIS sequence unless extra parent tracking is added.',
-    'Incorrect DP indexing between 0-based strings and 1-based DP dimensions is common.',
-    'For strictly increasing LIS, using upper_bound instead of lower_bound changes behavior with duplicates.',
-    'In reconstruction, tie-breaking direction differences can produce different valid LCS strings.'
+  diagram: `
+<svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto drop-shadow-2xl">
+  <defs>
+    <linearGradient id="matchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.1" />
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="800" height="420" fill="#0f172a" rx="16" stroke="#1e293b"/>
+
+  <!-- DP Table for LCS -->
+  <text x="50" y="40" fill="#64748b" font-size="14" font-weight="bold">LCS DP Table (abc vs ace)</text>
+  
+  <g transform="translate(100, 70)">
+    <!-- Header Row -->
+    <text x="75" y="30" fill="#94a3b8" font-size="12" text-anchor="middle">""</text>
+    <text x="135" y="30" fill="#94a3b8" font-size="12" text-anchor="middle">a</text>
+    <text x="195" y="30" fill="#94a3b8" font-size="12" text-anchor="middle">c</text>
+    <text x="255" y="30" fill="#94a3b8" font-size="12" text-anchor="middle">e</text>
+
+    <!-- Rows -->
+    ${['""', 'a', 'b', 'c'].map((char, i) => `
+      <text x="20" y="${90 + i * 60}" fill="#94a3b8" font-size="12" text-anchor="middle">${char}</text>
+      ${[0, 1, 2, 3].map((j) => `
+        <rect x="${50 + j * 60}" y="${60 + i * 60}" width="50" height="50" fill="#1e293b" rx="4" stroke="#334155"/>
+        <text x="${75 + j * 60}" y="${90 + i * 60}" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">---</text>
+      `).join('')}
+    `).join('')}
+
+    <!-- Example Cells -->
+    <rect x="110" y="120" width="50" height="50" fill="url(#matchGrad)" rx="4" stroke="#10b981" stroke-width="2"/>
+    <text x="135" y="150" fill="#10b981" font-size="14" font-weight="bold" text-anchor="middle">1</text>
+    <text x="135" y="105" fill="#10b981" font-size="10" text-anchor="middle">MATCH!</text>
+  </g>
+
+  <!-- LIS Intuition -->
+  <rect x="450" y="70" width="300" height="280" fill="#1e293b" rx="8" stroke="#334155"/>
+  <text x="600" y="100" fill="#94a3b8" font-size="14" font-weight="bold" text-anchor="middle">LIS $O(N \log N)$ Intuition</text>
+  <text x="470" y="140" fill="#cbd5e1" font-size="12">Maintain a sorted \`tails\` array.</text>
+  <text x="470" y="170" fill="#cbd5e1" font-size="12">1. If current item &gt; all tails, extend (Append).</text>
+  <text x="470" y="200" fill="#cbd5e1" font-size="12">2. Else, find the smallest tail $\geq$ item and replace.</text>
+  <text x="470" y="230" fill="#cbd5e1" font-size="12">Replacement doesn\'t change length but</text>
+  <text x="470" y="250" fill="#cbd5e1" font-size="12">increases chance of future extension.</text>
+</svg>
+  `,
+  keyPoints: [
+    {
+      title: 'State Transition Logic',
+      description: 'LCS matches consume diagonal ($i-1, j-1$). Non-matches choose maximum of inherited state from $i-1$ (skip char from $s1$) or $j-1$ (skip char from $s2$).'
+    },
+    {
+      title: 'Optimal LIS Strategy',
+      description: 'While $O(N^2)$ DP is intuitive, the $O(N \\log N)$ "Patience Sorting" approach uses binary search to maintain the smallest possible ending element for each subsequence length.'
+    },
+    {
+      title: 'Reconstruction Path',
+      description: 'To find the actual sequence, backtrack from $dp[N][M]$ following matches or the direction of maximum inherited value.'
+    }
   ],
+  comparisonTable: {
+    headers: ['Problem', 'State', 'Transition', 'Complexity'],
+    rows: [
+      ['LCS', '$dp[i][j]$', 'Match: $1+dp[i-1][j-1]$, Else: $max(up, left)$', '$O(N \\times M)$'],
+      ['LIS', '$dp[i]$', '$max(dp[j]) + 1$ for all $j < i$ and $arr[j] < arr[i]$', '$O(N^2)$ or $O(N \\log N)$'],
+      ['Edit Distance', '$dp[i][j]$', 'Min of Replace/Delete/Insert transitions', '$O(N \\times M)$'],
+    ]
+  },
+  videoUrl: 'https://www.youtube.com/watch?v=ASoaQq66foQ',
   concepts: [
     {
-      name: 'Sequence Alignment DP',
-      details:
-        'LCS is a blueprint for two-sequence dynamic programming problems.'
-    },
-    {
-      name: 'State Compression',
-      details:
-        'LIS length can be solved without full `O(N^2)` DP by keeping compressed order statistics.'
-    },
-    {
-      name: 'Alignment vs Ordering',
-      details:
-        'LCS optimizes alignment between two sequences, while LIS optimizes order consistency within one sequence.'
-    },
-    {
-      name: 'Length vs Witness',
-      details:
-        'Many DP designs first compute optimal value and then add parent or backtracking data to extract one optimal witness sequence.'
+      name: 'Patience Sorting (LIS)',
+      details: 'A card game strategy where you minimize the number of piles (tails), which corresponds directly to the LIS length.'
     }
   ]
 };

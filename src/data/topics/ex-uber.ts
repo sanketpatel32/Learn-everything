@@ -93,34 +93,36 @@ export const uber: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Geospatial Indexing',
-      description: 'You cannot write a SQL query like `SELECT * FROM drivers WHERE lat BETWEEN X AND Y`. The DB would have to linearly scan millions of rows. Uber uses geospatial indexing (QuadTrees, Geohashing, or Uber\'s open-source H3 Hexagon system) to divide the world into grids. Finding a driver becomes an O(1) hash lookup to find which "hex" the rider is currently in.'
+      title: 'Geospatial Indexing (S2 vs H3)',
+      description: 'Standard SQL queries cannot scale for millions of moving objects. Uber uses **S2 Geometry** (dividing the world into a hierarchy of squares) or **H3** (Uber\'s hexagonal indexing). Hexagons are preferred for dynamic pricing and heatmaps because the distance between the center of a hexagon and all its neighbors is constant, unlike squares where corners are further away.'
     },
     {
-      title: 'Massive Write Load',
-      description: 'If you have 1 million active drivers updating their GPS every 4 seconds, you get 250,000 Writes Per Second. Standard relational databases (Postgres) cannot handle this write velocity. Uber ingests these locations into Kafka, and rapidly updates an in-memory datastore (like Redis or custom Go services) to track current locations.'
+      title: 'Geofence Service',
+      description: 'Riders and drivers constantly cross boundaries (Airports, Surge Zones, City limits). The **Geofence Service** stores millions of polygons and determines in near real-time if a coordinate is inside a polygon. This is optimized using a R-Tree or spatial index to avoid checking every single polygon for every location update.'
+    },
+    {
+      title: 'Marketplace Dynamic Pricing (Surge)',
+      description: 'To balance demand and supply, Uber uses **Dynamic Pricing**. This engine consumes location streams from Kafka to calculate the "Surge Multiplier". It identifies areas with high passenger intent and low driver availability, increasing prices to attract more drivers to that specific hexagon.'
     },
     {
       title: 'The Matchmaker (Dispatch Service)',
-      description: 'When a rider requests a car, the Dispatch service draws a radius (or checks nearby H3 hexagons), finds available drivers, and calculates actual ETA/routing using road-graph data (avoiding traffic, one-way streets). It then broadcasts the offer to the best driver via WebSockets.'
-    },
-    {
-      title: 'Eventual Consistency is Acceptable',
-      description: 'If a driver\'s GPS tracker is delayed by 2 seconds, the system doesn\'t crash. Strongly consistent SQL transactions are not necessary for real-time location. BASE (Basically Available, Soft state, Eventual consistency) is ideal here.'
+      description: 'When a rider requests a car, the Dispatch service draws a radius (or checks nearby H3 hexagons), finds available drivers, and calculates the actual ETA using a road-graph (Dijkstra). It optimizes for **Batch Matching**—waiting a few seconds to match multiple riders optimally rather than "first-come, first-served".'
     }
   ],
   comparisonTable: {
-    headers: ['Feature', 'Uber (Dispatching)', 'Google Maps (Navigation)'],
+    headers: ['Factor', 'Uber (Dispatch)', 'Google Maps (Navigation)'],
     rows: [
-      ['Update Frequency', 'High (Driver GPS every 4s)', 'Low (Road data updates)'],
-      ['Write Intensity', 'Extremely High (Location updates)', 'Low (Reads dominate)'],
-      ['Primary Algorithm', 'QuadTree / S2 Geometry', 'Dijkstra / A* Search'],
+      ['Data Volatility', 'High (1M+ moving drivers)', 'Low (Road data changes slowly)'],
+      ['Latency Target', 'Ultra-low (< 1s matching)', 'Medium (Seconds for routing)'],
+      ['Indexing System', 'H3 Hexagonal Grid', 'S2 Square Grid / Segments'],
+      ['Write Pattern', 'Append-only logs (Kafka)', 'Read-heavy tiles / shards']
     ]
   },
   videoUrl: 'https://www.youtube.com/watch?v=DGtalg5efCw',
   pitfalls: [
-    'Using SQL for Real-Time Location: At 250k Writes/sec, row-level locking in SQL will cause massive deadlocks and latency. Volatile, temporal data belongs in specialized in-memory stores, while ride receipts and billing go to reliable durable storage (Postgres/Cassandra).',
-    'Thundering Herd on Reconnection: If a cell tower blips and 5,000 drivers reconnect to the WebSocket gateway simultaneously, it can easily DDoS your own servers. Reconnection logic must implement Exponential Backoff and Jitter.',
-    'Ignoring Concurrency in Dispatch: If two riders request a car in the same hexagon at exactly the same millisecond, the Dispatcher might offer the same driver to both riders. You must use Distributed Locks (Redis/ZooKeeper) or atomic operations when changing driver status from "AVAILABLE" to "DISPATCHED".'
+    'Using SQL for Real-Time Location: At 250k Writes/sec, row-level locking in SQL will cause catastrophic latency. Volatile location data belongs in in-memory caches like Redis.',
+    'Ignoring Batch Matching: Matching every rider to the "nearest" driver instantly can lead to global inefficiency. Sophisticated systems wait 2-5 seconds to optimize pairings across a whole group of riders.',
+    'Network Partitioning: If the Dispatch service loses connection to the Location DB, no matches can happen. The system must degrade gracefully, perhaps by allowing drivers to "self-dispatch" in emergency modes.',
+    'Clock Skew: Relying on server timestamps for high-velocity location updates. Use monotonically increasing sequence IDs or client-side timestamps with drift compensation.'
   ]
 };

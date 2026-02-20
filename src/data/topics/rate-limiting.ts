@@ -106,34 +106,38 @@ export const rateLimiting: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Why Rate Limit?',
-      description: 'Without rate limiting, a single user (or bad actor) can overwhelm your database with 10,000 requests per second, starving all other users and potentially crashing the service. Rate limiting strictly enforces an upper boundary on resource consumption.'
+      title: 'Token Bucket vs Leaky Bucket',
+      description: 'Token Bucket allows bursts (up to bucket size) by consuming pre-filled tokens. Leaky Bucket enforces a rigid process rate by queuing requests and "leaking" them at a constant speed, ideal for smooth traffic flows.'
     },
     {
-      title: 'Token Bucket Algorithm',
-      description: 'Imagine a bucket that holds a maximum of `N` tokens. A background process adds a token to the bucket every `1/R` seconds. When a request arrives, it must take 1 token from the bucket. If the bucket is empty, the request is instantly rejected (HTTP 429 Too Many Requests). This is highly efficient and allows for "bursts" of traffic up to the bucket capacity.'
+      title: 'Sliding Window Counter',
+      description: 'A hybrid approach that tracks request counts in the current and previous windows. By calculating a weighted average (e.g., $80\\%$ of previous window + current count), it prevents the "double-limit burst" inherent in Fixed Window algorithms.'
     },
     {
-      title: 'Leaky Bucket Algorithm',
-      description: 'Instead of dropping requests immediately, they are placed in a fixed-size queue (the bucket). The server pulls parameters from this queue at a constant, steady rate (the leak). If the queue fills up, new requests overflow and are dropped. This removes bursts entirely, forcing traffic into a predictable, smooth flow.'
-    },
-    {
-      title: 'Where to Rate Limit',
-      description: 'Rate limiting is almost always implemented at the **API Gateway** or Load Balancer (like Nginx, AWS API Gateway, or Cloudflare). It uses a fast, in-memory store like **Redis** (often using Redis INCR and expirations or specialized Lua scripts) to track the request counts across distributed servers.'
+      title: 'Redis-Based Implementation',
+      description: 'Distributed rate limiting uses Redis for its speed. Common patterns include `SETNX` for fixed windows or `ZSET` (sorted set) to implement a Sliding Window Log by storing request timestamps as scores.'
     }
   ],
   comparisonTable: {
-    headers: ['Pattern', 'Bursts Allowed?', 'Memory Usage', 'Best For'],
+    headers: ['Algorithm', 'Burst Handling', 'Memory Efficiency', 'Best For'],
     rows: [
-      ['Token Bucket', 'Yes (up to bucket size)', 'Low (Stores 1 integer per user)', 'Public APIs (Stripe, Twitter) where brief bursts are acceptable.'],
-      ['Leaky Bucket', 'No (smooths traffic)', 'Medium (Maintains a queue)', 'Protecting fragile legacy systems that require a strict steady pace.'],
-      ['Fixed Window Counters', 'Yes (at window edges)', 'Very Low', 'Simple limits (100 reqs per hour), but suffers from 2x bursts at reset boundaries.'],
-      ['Sliding Window Log', 'Yes', 'High (Stores timestamps of every req)', 'Extremely precise rate limiting where exact bounds must be guaranteed.']
+      ['Token Bucket', 'Allowed (Bursty)', 'High (1 counter)', 'Modern APIs (AWS, Stripe).'],
+      ['Leaky Bucket', 'Smooth (No Bursts)', 'Medium (Queue)', 'Legacy system protection.'],
+      ['Fixed Window', '2x Burst at edges', 'Highest', 'Low-traffic, daily/monthly quotas.'],
+      ['Sliding Window', 'Precise (No Edge Burst)', 'Medium', 'Strict tier-based limiting.'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=CRGPbCbR0vM',
+  approaches: [
+    {
+      title: 'Sliding Window Log (Redis ZSET)',
+      content: '```lua\n-- Redis Lua Script for Precise Rate Limiting\nlocal current_time = ARGV[1]\nlocal window_start = current_time - ARGV[2]\nredis.call("ZREMRANGEBYSCORE", KEYS[1], 0, window_start)\nlocal count = redis.call("ZCARD", KEYS[1])\nif count < tonumber(ARGV[3]) then\n    redis.call("ZADD", KEYS[1], current_time, current_time)\n    return 1\nend\nreturn 0\n```',
+      complexity: { time: 'O(log N)', space: 'O(N) per user' }
+    }
+  ],
   pitfalls: [
-    'Rate limiting by IP Address instead of Authenticated User ID. In enterprise environments, thousands of users might share a single NAT IP. Banning the IP bans the entire company.',
-    'Not communicating limits. Always return `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers so well-behaved clients know when to back off.',
-    'Using an overly complicated distributed algorithm when simpler local node rate limiting (with slight inaccuracies) would suffice for the scale.'
+    'Race Conditions in Distributed Systems: Using `GET` and `SET` separately. Always use Redis Lua scripts or atomic increments.',
+    'IP-based Limiting: Thousands of users behind a Corporate NAT/Proxy will share one limit. Use API Keys or User IDs instead.',
+    'Clock Skew: In a distributed cluster, different servers might have different times, making window boundaries inconsistent.'
   ]
 };

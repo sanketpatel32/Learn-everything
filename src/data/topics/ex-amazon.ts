@@ -123,34 +123,36 @@ export const amazon: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Cart Availability (Even on Failure)',
-      description: 'Amazon realized early on that if a database crashes, failing to "Add to Cart" directly loses money and consumer trust. The Shopping Cart uses a highly available NoSQL system (like DynamoDB). If connection is lost to the primary node, it writes the cart update to a backup node instantly. Even if the state diverges (`[Shirt]` on Node 1 vs `[Pants]` on Node 2), they simply merge to `[Shirt, Pants]` later. No items are ever lost.'
+      title: 'Shopping Cart Availability (Vector Clocks)',
+      description: 'Amazon prioritizes "Add to Cart" availability above all else. This uses an **AP system** (DynamoDB). If a network partition occurs, different nodes might receive different updates. Amazon uses **Vector Clocks** to track versions and detect conflicts. Conflicts are resolved at **read-time** (Semantic Reconciliation), usually by merging all items added across divergent states so no purchase intent is ever lost.'
     },
     {
-      title: 'Search/Catalog Infrastructure',
-      description: 'The Catalog Service powers millions of searches per second. Products in PostgreSQL are asynchronously synced via Change Data Capture (Kafka/Debezium) into ElasticSearch clusters globally. The user searches against an Inverted Index in ElasticSearch (or a CDN cache layer), entirely bypassing the massive relational databases.'
+      title: 'High Availability Writes (Sloppy Quorum)',
+      description: 'DynamoDB uses a **Sloppy Quorum** and "Hinted Handoff". If the primary node for a user\'s cart is down, the write is accepted by a healthy neighboring node. Once the primary node recovers, the neighbor "hands off" the data. This ensures that even during massive cluster failures, the customer can still add items to their cart without seeing an error.'
     },
     {
-      title: 'Order Processing (Saga Pattern)',
-      description: 'Checkout is not a single database transaction. It takes the form of an Orchestrated Saga: 1. Reserve Inventory (SQL Distributed Lock). 2. Await Payment Gateway confirmation (Stripe). 3. If Stripe fails (Insufficient Funds), execute a compensating transaction to un-reserve the inventory and allow other buyers.'
+      title: 'Checkout Orchestration (Saga Pattern)',
+      description: 'Checkout is a long-running transaction involving Inventory, Payment, and Shipping. Amazon uses the **Saga Pattern** (specifically Orchestration). A central "Checkout Coordinator" manages the flow: Reserve stock (SQL) -> Authorize payment (Stripe) -> Commit order. If any step fails, the Coordinator triggers "Compensating Transactions" to undo previous steps and restore system consistency.'
     },
     {
-      title: 'Recommendation Engine',
-      description: 'The "Customers who bought this also bought" feature runs primarily as an asynchronous Batch Big Data job (Hadoop/Spark). It crunches billions of purchase graphs nightly and stores pre-computed "Product-to-Product" correlation keys in a lightning-fast Key-Value cache (Redis), accessed in milliseconds during page loads.'
+      title: 'Search/Catalog Sync (CDC)',
+      description: 'The Product Catalog is read-heavy. Updates in the source-of-truth SQL DB are streamed via **Change Data Capture (CDC)** like Kafka/Debezium into an ElasticSearch cluster. This allows sub-second search latency and complex filtering while keeping the transactional DB load minimal.'
     }
   ],
   comparisonTable: {
-    headers: ['Subsystem', 'Database Used', 'ACID / CAP Focus', 'Reason For Choice'],
+    headers: ['Factor', 'Shopping Cart (AP Focus)', 'Inventory/Payment (CP Focus)'],
     rows: [
-      ['Shopping Cart', 'DynamoDB / Cassandra', 'AP (Available, Partition Tolerant)', 'Losing a cart addition = losing money immediately. Eventual consistency is completely fine. Merging states is easy.'],
-      ['Item Inventory', 'PostgreSQL / Aurora', 'CP (Consistent, Partition Tolerant)', 'Double-selling the last PlayStation 5 breaks legal contracts and causes massive CS issues. Consistency is mandatory.'],
-      ['Product Catalog', 'ElasticSearch / Redis', 'AP', 'Massive read volume (99% reads/finds). Latency is king. We can afford the catalog showing a stale price for 10 seconds.']
+      ['Data Consistency', 'Eventual (Merged via Vector Clocks)', 'Strict (ACID Transactions)'],
+      ['Availability Target', '100% (Never fail a write)', 'High (But failsafe is preferred)'],
+      ['Conflict Strategy', 'Last-Write-Wins or Semantic Merge', 'Pessimistic Locking / Stop-the-world'],
+      ['Storage Tech', 'DynamoDB / NoSQL', 'PostgreSQL / Aurora']
     ]
   },
   videoUrl: 'https://www.youtube.com/watch?v=ep0VId88PZ8',
   pitfalls: [
-    'Locking Inventory at Add-to-Cart: If you subtract inventory when users put an item in a cart, attackers can simply script 100 bots to add all your PS5s to their carts and never check out, locking out legitimate buyers. Inventory should only be locked during the active Checkout process.',
-    'Distributed Transactions (2PC): Attempting to lock the User Database, Inventory Database, and Payment Provider simultaneously using a Two-Phase Commit is a latency nightmare. Microservices must use Sagas (event-driven compensations) over synchronous distributed locks.',
-    'Idempotency failures on Retries: If a phone drops cell service while buying, the app will retry the payment API call. If the API is not "idempotent" (requiring a unique `Idempotency-Key`), you will charge the customer\'s credit card twice for the exact same cart.'
+    'Locking Inventory at Add-to-Cart: This allows "Denial of Inventory" attacks where bots fill carts but don\'t buy. Only lock inventory during the active, timed checkout window.',
+    'Distributed Transactions (2PC): Using 2PC for microservices creates extreme latency and risk of global stalls. Use the Saga pattern with event-driven compensations instead.',
+    'Ignoring Idempotency: Retrying a checkout call without an Idempotency Key can lead to double-charging customers. Every mutation must track a unique client-generated Request ID.',
+    'Merging Conflicts naively: Using "Last Write Wins" (LWW) for a shopping cart might accidentally delete a user\'s item. Semantic Merging (keeping all unique items) is much safer for user experience.'
   ]
 };

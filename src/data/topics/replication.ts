@@ -85,34 +85,41 @@ export const replication: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Leader-Follower (Master-Slave) Architecture',
-      description: 'The most common setup. One node is designated the Leader. All writes MUST go to the Leader. The Leader writes the data to its local storage, then sends the data change log (often the WAL - Write Ahead Log) to its Followers. Followers apply the log to stay continuously updated. Clients can read from ANY node.'
+      title: 'Quorum-Based Replication (N, W, R)',
+      description: 'Leaderless systems use quorums. For $N$ replicas, a write must be acknowledged by $W$ nodes and a read must contact $R$ nodes. If $W + R > N$, you are guaranteed to see the latest write. Typical config: $N=3, W=2, R=2$.'
     },
     {
-      title: 'Synchronous vs Asynchronous Replication',
-      description: 'In Sync replication, the Leader waits for Followers to confirm they received the write before telling the client "Success". This guarantees no data loss if the Leader crashes, but makes writes very slow. Async replication tells the client "Success" instantly, and replicates in the background. It is fast, but a sudden Leader crash can result in lost data if it wasn\'t replicated yet.'
+      title: 'Consistency Models',
+      description: '1. **Read-Your-Writes**: Ensures a user always sees their own updates. 2. **Monotonic Reads**: Ensures time doesn\'t "go backward" for a user (reading from a laggy replica). 3. **Linearizability**: The strongest model, makes the database appear as a single atomic copy.'
     },
     {
-      title: 'Multi-Leader Replication',
-      description: 'Instead of one Leader, you have multiple Leaders (usually one per datacenter/region). Clients write to their local Leader. Leaders then asynchronously replicate their changes to each other. This is complex because it requires **Conflict Resolution** (what happens if two users update the same row simultaneously in different continents?).'
-    },
-    {
-      title: 'Leaderless Replication',
-      description: 'Pioneered by Amazon Dynamo (and used in Cassandra). Any client can send writes to any replica. To ensure consistency, clients write to $W$ replicas and read from $R$ replicas, requiring a quorum $W + R > N$.'
+      title: 'Anti-Entropy & Read Repair',
+      description: 'In leaderless systems, "Anti-Entropy" processes (like Merkle Trees) run in the background to find and fix data discrepancies, while "Read Repair" fixes out-of-date replicas during a client read.'
     }
   ],
   comparisonTable: {
-    headers: ['Replication Type', 'Write Speed', 'Complexity', 'Best For'],
+    headers: ['Model', 'Guarantees', 'Performance Trade-off', 'Complexity'],
     rows: [
-      ['Single Leader (Async)', 'Very Fast', 'Low', 'Standard web apps with read-heavy workloads (MySQL, Postgres defaults)'],
-      ['Single Leader (Sync)', 'Slow (Network Bound)', 'Low', 'Financial systems where absolute 0 data loss is non-negotiable'],
-      ['Multi-Leader', 'High (Local writes)', 'Extremely High (Conflict resolution)', 'Collaborative apps (Google Docs) or true multi-region global apps'],
-      ['Leaderless', 'Fast', 'High (Read repair, Vector clocks)', 'High availability, write-heavy workloads (Cassandra)']
+      ['Eventual', 'Data converges eventually', 'Highest', 'Low'],
+      ['Read-Your-Writes', 'See your own updates', 'Medium', 'Medium'],
+      ['Monotonic', 'Order is preserved', 'Medium', 'High'],
+      ['Strong (Linear)', 'Atomic visibility', 'Lowest', 'Highest'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=07t2V97I8N8',
+  concepts: [
+    {
+      name: 'WAL (Write-Ahead Log)',
+      details: 'Instead of sending complex SQL, leaders replicate the binary WAL, which Followers apply byte-for-byte to their storage engine for perfect fidelity.'
+    },
+    {
+      name: 'Conflict Resolution (LWW)',
+      details: 'Last-Write-Wins (LWW) uses timestamps, while Vector Clocks track causality to resolve conflicting updates in Multi-Leader or Leaderless systems.'
+    }
+  ],
   pitfalls: [
-    'Replication Lag: In async setups, a user updates their profile and instantly refreshes the page. The read hits a Follower that hasn\'t received the update yet, so they see their old profile. Solution: Read-Your-Own-Writes consistency (routing the immediate read to the Leader).',
-    'Split Brain: The network fails, and half the nodes think the Leader is dead, electing a new one. Now you have two Leaders accepting conflicting writes. Requires strict Quorum algorithms (like Raft or Paxos) to prevent.',
-    'Treating Replication as Backups. If you run `DROP TABLE users;` on the Leader, the replication stream will happily execute `DROP TABLE users;` on all Followers milliseconds later. You still need backups.'
+    'Replication Lag: Async followers can be seconds or minutes behind. Use "Read-Your-Writes" by pinned routing to the leader for sensitive data.',
+    'Split Brain: Network partitions can create multiple leaders. Use consensus (Paxos/Raft) or Quorums ($N/2 + 1$) to decide the valid leader.',
+    'Treating Replication as Backup: DB commands (like DROP) are replicated. You still need point-in-time snapshots and offsite backups.'
   ]
 };

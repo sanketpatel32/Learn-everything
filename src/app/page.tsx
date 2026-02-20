@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import RoadmapGraph from '@/components/RoadmapGraph';
+import { Logo } from '@/components/Logo';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
@@ -19,6 +20,18 @@ export default function Home() {
       </div>
 
       <header className="w-full max-w-7xl px-4 sm:px-8 py-8 md:py-12 flex flex-col items-center gap-6 sm:gap-8 z-10">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-500/5 rounded-3xl p-3 sm:p-4 border border-indigo-500/10 backdrop-blur-xl relative">
+            <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full opacity-50" />
+            <Logo className="w-full h-full relative z-10" />
+          </div>
+        </motion.div>
+
         <div className="text-center space-y-3 sm:space-y-4">
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] sm:text-xs font-semibold tracking-wide uppercase mb-1 sm:mb-2">
             Interview Preparation

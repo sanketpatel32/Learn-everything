@@ -9,57 +9,87 @@ export const twoPointers: TopicContent = {
     time: 'O(N)',
     space: 'O(1)'
   },
+  diagram: `
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto drop-shadow-2xl">
+  <defs>
+    <linearGradient id="pointerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.05" />
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#60a5fa" />
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="800" height="300" fill="#0f172a" rx="16" stroke="#1e293b"/>
+
+  <!-- Sorted Array -->
+  <g transform="translate(100, 100)">
+    ${[1, 2, 4, 6, 10, 12].map((val, i) => `
+      <rect x="${i * 60}" y="0" width="50" height="50" fill="#1e293b" rx="8" stroke="#334155" stroke-width="2"/>
+      <text x="${i * 60 + 25}" y="30" fill="#f8fafc" font-size="18" font-weight="bold" text-anchor="middle">${val}</text>
+    `).join('')}
+  </g>
+
+  <!-- Pointers -->
+  <path d="M 125 180 L 125 155" stroke="#ef4444" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <text x="125" y="200" fill="#ef4444" font-size="12" font-weight="bold" text-anchor="middle">Left (idx 0)</text>
+
+  <path d="M 425 180 L 425 155" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <text x="425" y="200" fill="#10b981" font-size="12" font-weight="bold" text-anchor="middle">Right (idx 5)</text>
+
+  <!-- Decision Logic -->
+  <rect x="520" y="50" width="220" height="120" fill="#1e293b" rx="8" stroke="#334155"/>
+  <text x="630" y="75" fill="#94a3b8" font-size="12" text-anchor="middle">Sum (1 + 12) = 13</text>
+  <text x="630" y="105" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">13 &lt; 16 (Target)</text>
+  <text x="630" y="140" fill="#60a5fa" font-size="12" font-weight="bold" text-anchor="middle">ACTION: left += 1</text>
+</svg>
+  `,
+  keyPoints: [
+    {
+      title: 'Monotonic Elimination',
+      description: 'The strategy relies on the input being sorted (or having a predictable property). By moving one pointer, we eliminate an entire set of impossible pairs in $O(1)$ time.'
+    },
+    {
+      title: 'Slow and Fast Pointers',
+      description: 'Used for cycle detection in linked lists or finding the middle element. The fast pointer moves at twice the speed of the slow pointer ($O(N)$ time, $O(1)$ space).'
+    },
+    {
+      title: 'Same Direction (Deduplication)',
+      description: 'One pointer tracks the "last valid position" while the other scans forward to find unique elements. Essential for in-place array modifications.'
+    }
+  ],
+  comparisonTable: {
+    headers: ['Strategy', 'Movement', 'typical Problems'],
+    rows: [
+      ['Opposite Direction', '`left++, right--`', 'Two Sum (Sorted), Reverse String, Valid Palindrome.'],
+      ['Slow & Fast', '`slow++, fast+=2`', 'LinkedList Cycle, Find Middle, Happy Number.'],
+      ['Same Direction', '`slow, fast++`', 'Remove Duplicates, Move Zeroes, Partitioning.'],
+    ]
+  },
+  videoUrl: 'https://www.youtube.com/watch?v=On03HWe2t6E',
   approaches: [
     {
-      title: 'Brute Force (Check Every Pair)',
-      content:
-        'Test all possible pairs and return the first valid match.\n\nStep-by-step mechanics:\n1. Choose first index `i`.\n2. Pair it with every `j > i`.\n3. Check if `arr[i] + arr[j] == target`.\n\n```python\nfunction twoSumBruteForce(arr, target):\n    n = len(arr)\n    for i in range(0, n):\n        for j in range(i + 1, n):\n            if arr[i] + arr[j] == target:\n                return [i, j]\n    return [-1, -1]\n```\n\nThis is exhaustive but quadratic, so it does not scale for large inputs.',
-      complexity: {
-        time: 'O(N^2)',
-        space: 'O(1)'
-      }
+      title: 'Opposite Direction Template',
+      content: '```python\ndef oppositePointers(arr, target):\n    left, right = 0, len(arr) - 1\n    while left < right:\n        curr = arr[left] + arr[right]\n        if curr == target: return [left, right]\n        if curr < target: left += 1\n        else: right -= 1\n```',
+      complexity: { time: 'O(N)', space: 'O(1)' }
     },
     {
-      title: 'Better Approach (Sort + Two Pointers for Unsorted Input)',
-      content:
-        'If input is unsorted but you need index output, sort value-index pairs, then apply two pointers.\n\nStep-by-step mechanics:\n1. Build `pairs = [(value, originalIndex)]`.\n2. Sort pairs by `value`.\n3. Use opposite pointers on sorted values.\n4. Return stored original indices once target is found.\n\n```python\nfunction twoSumSortAndPointers(arr, target):\n    pairs = []\n    for i in range(0, len(arr)):\n        pairs.append((arr[i], i))\n\n    pairs.sort(key=lambda x: x[0])\n\n    left = 0\n    right = len(pairs) - 1\n\n    while left < right:\n        s = pairs[left][0] + pairs[right][0]\n\n        if s == target:\n            return [pairs[left][1], pairs[right][1]]\n        if s < target:\n            left += 1\n        else:\n            right -= 1\n\n    return [-1, -1]\n```\n\nTrade-off:\nYou pay `O(N log N)` sorting cost, but still get clear two-pointer elimination logic.',
-      complexity: {
-        time: 'O(N log N)',
-        space: 'O(N)'
-      }
-    },
-    {
-      title: 'Optimal Approach (Opposite-Direction Pointers on Sorted Input)',
-      content:
-        'For already sorted arrays, two pointers give true linear-time selection.\n\nStep-by-step mechanics:\n1. Set `left = 0`, `right = n - 1`.\n2. Compute `s = arr[left] + arr[right]`.\n3. If equal, done.\n4. If `s < target`, move `left` right to increase sum.\n5. If `s > target`, move `right` left to decrease sum.\n6. Continue until pointers cross.\n\n```python\nfunction twoSumTwoPointers(arr, target):\n    left = 0\n    right = len(arr) - 1\n\n    while left < right:\n        s = arr[left] + arr[right]\n\n        if s == target:\n            return [left, right]\n        elif s < target:\n            left += 1\n        else:\n            right -= 1\n\n    return [-1, -1]\n```\n\nWhy this works:\nSorted order makes pointer moves monotonic. One move eliminates many impossible pairs at once, so each index is visited at most once by each pointer.',
-      complexity: {
-        time: 'O(N)',
-        space: 'O(1)'
-      }
+      title: 'Fast & Slow Template',
+      content: '```python\ndef fastSlow(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        if slow == fast: return True # Cycle detected\n    return False\n```',
+      complexity: { time: 'O(N)', space: 'O(1)' }
     }
   ],
   pitfalls: [
-    'Applying opposite-direction pointer logic to unsorted arrays without preprocessing leads to wrong elimination.',
-    'Using `while left <= right` for pair problems can accidentally reuse the same index.',
-    'For duplicate-sensitive tasks, pointer updates after a match must skip repeated values correctly.',
-    'Returning indices from sorted-pair approach requires mapping back to original indices.',
-    'Integer overflow can occur when summing large values in fixed-width integer types.'
+    'Applying to unsorted data: Opposite pointers only work on sorted/monotonic inputs.',
+    'Infinite Loops: Forgetting to increment/decrement pointers inside the `while` block.',
+    'Edge Cases: Empty arrays or arrays with only one element.',
+    'Duplicate Handling: Not skipping identical elements when finding all unique pairs.'
   ],
   concepts: [
     {
-      name: 'Monotonic Elimination',
-      details:
-        'Pointer movement is justified by sorted order, allowing whole regions of impossible answers to be discarded.'
-    },
-    {
-      name: 'Fast & Slow',
-      details:
-        'Another two-pointer family where pointers move at different speeds, useful for cycle detection and middle-node queries.'
-    },
-    {
-      name: 'Problem Preconditions',
-      details:
-        'The same pointer idea has different guarantees depending on input properties such as sortedness and duplicate handling.'
+      name: 'Deterministic Rules',
+      details: 'The movement of each pointer must be strictly decided by the comparison of the current state vs target state.'
     }
   ]
 };

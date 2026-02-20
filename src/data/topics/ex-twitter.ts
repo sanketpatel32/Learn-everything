@@ -126,34 +126,36 @@ export const twitter: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Fan-Out on Write (Push Model)',
-      description: 'Used for 99% of normal users (e.g., Alice has 500 followers). When Alice tweets, a background worker looks up her 500 followers and pushes the `Tweet_ID` into 500 different lists in a Redis Cluster. When Follower Bob opens Twitter, his timeline is already pre-computed in Redis. Reading the feed is lightning fast O(1).'
+      title: 'Hybrid Fan-out Strategy',
+      description: 'Twitter uses a **Hybrid Model**. Most users (Push) have their timelines pre-computed in Redis. For "Celebrities" (e.g., millions of followers), a Pull model is used. At read-time, the system fetches the celebrity tweets from a global cache and merges them into the user\'s pre-computed feed. This avoids "Justin Bieber thundering herds" that would break message delivery.'
     },
     {
-      title: 'Fan-Out on Read (Pull Model)',
-      description: 'Handling Celebrities (e.g., Elon Musk with 100M followers). If Elon tweets and Twitter tries to write that `Tweet_ID` to 100 Million Redis lists, the fan-out queue will lag for hours, or the Redis cluster will suffer a write-storm CPU spike. For celebrities, Twitter uses a "Pull Model." The tweet is simply written to a global Database (and caching tier).'
+      title: 'Social Graph Storage (FlockDB)',
+      description: 'Storing "who follows whom" is a massive scale challenge. Twitter uses specialized services to handle this social graph (highly sharded MySQL or dedicated graph stores). It optimizes for the "In-degree" (Followers) vs "Out-degree" (Following) lookups, which are critical for the Fan-out process.'
     },
     {
-      title: 'Hybrid Approach (Merging)',
-      description: 'When Bob opens up Twitter, the Feed API: 1) Fetches Bob\'s pre-computed Redis timeline (normal friends). 2) Checks who Bob follows who is designated a "Celebrity". 3) Pings the global Tweet Cache for the latest tweets from those celebrities. 4) Memory-sorts and merges both lists by timestamp before returning them to Bob.'
+      title: 'Timeline Cache Management',
+      description: 'Timelines are stored as **Redis Lists** of tweet IDs. To manage RAM, Twitter only caches timelines for active users. If a user hasn\'t logged in for weeks, their timeline is evicted. Upon login, the "Timeline Service" rebuilds it on-demand by querying the database, balancing memory cost vs. user experience.'
     },
     {
-      title: 'Storage & Search Architecture',
-      description: 'Tweets are immutable and append-only. They are stored in a heavily sharded SQL/NoSQL cluster. A dedicated Search Index (e.g., ElasticSearch/Lucene) continuously ingests new tweets. Since tweets are small (280 chars), the major cost is maintaining secondary indexes to search hashtags globally in real time.'
+      title: 'Storage & Search Partitioning',
+      description: 'Tweets are sharded by `Tweet_ID` (using SnowFlake for time-sorting). The search index is partitioned by time to allow fast "Live" searches. Since tweets are small, the bottleneck is often the high-velocity metadata updates (retweets, likes counts).'
     }
   ],
   comparisonTable: {
-    headers: ['Feature', 'Fan-out on Write (Push)', 'Fan-out on Read (Pull)'],
+    headers: ['Factor', 'Push Model (Write)', 'Pull Model (Read)'],
     rows: [
-      ['Efficiency', 'High for small users', 'High for celebrities'],
-      ['Latency', 'Fast delivery for followers', 'Slow (Computing on click)'],
-      ['Space', 'Duplicate data in feeds', 'Minimal storage overhead'],
+      ['Primary User', 'Normal users (< 5k followers)', 'Celebrities (> 1M followers)'],
+      ['Read Complexity', 'O(1) - Already pre-computed', 'O(S) - Merge celebrities at runtime'],
+      ['Write Complexity', 'O(K) - Write to K followers', 'O(1) - Write to single global store'],
+      ['Traffic Profile', 'Write-heavy during spikes', 'Read-heavy during spikes']
     ]
   },
   videoUrl: 'https://www.youtube.com/watch?v=o5n85GRKuzk',
   pitfalls: [
-    'Applying Push to everyone: The "Justin Bieber Problem": Writing an entry into 50 Million independent Redis lists creates an enormous backlog. A user might not see a breaking news tweet until hours later because the fan-out queue is still processing.',
-    'Sorting entirely in Database: Executing `SELECT * FROM tweets WHERE author_id IN (1, 2... 500) ORDER BY time DESC` is brutally slow at scale, even with indexes. Pre-computing in cache (Redis lists) is essential for sub-200ms feed loading.',
-    'Ignoring Inactive Users: Writing to the Redis lists of users who haven\'t logged in for 3 years wastes massive amounts of RAM. Fan-out workers should check a "last active" timestamp and skip pushing to dormant users (they switch to the Pull Model if they ever log back in).'
+    'Universal Push: The "Celebrity Thundering Herd" problem. Writing to 100M Redis lists will lag your system for hours. A hybrid Push/Pull model is mandatory for stability.',
+    'Database Sorting: Executing `ORDER BY time` on large sharded tables during read-time is too expensive. Pre-computing timelines in Redis is essential for speed.',
+    'Ignoring Inactive Users: Wasting RAM by fan-out into timelines for dormant accounts. Only pre-compute feeds for users active within the last 30 days.',
+    'SnowFlake Collision: Ensuring globally unique, time-sortable IDs across 1000s of servers. Clock drift protection is critical for chronological integrity.'
   ]
 };

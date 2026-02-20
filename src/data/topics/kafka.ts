@@ -107,6 +107,18 @@ export const kafka: TopicContent = {
   `,
   keyPoints: [
     {
+      title: 'Producer Acknowledgments (Acks)',
+      description: 'Producers can choose how many "Acks" they require. **acks=0**: Fire and forget (Fastest, zero safety). **acks=1**: Leader confirms write (Balanced). **acks=all**: Leader and all in-sync replicas must confirm write (Slowest, maximum data safety). This setting allows Kafka to be tuned for either extreme performance or banking-grade durability.'
+    },
+    {
+      title: 'Partitioning Strategies',
+      description: 'How data is split defines scalability. **Round-robin** distribution spreads load evenly but loses ordering. **Key-based Partitioning** (e.g., `hash(user_id)`) ensures all events for a specific user land in the same partition, guaranteeing chronological processing of that user\'s actions.'
+    },
+    {
+      title: 'Consumer Rebalancing',
+      description: 'When a consumer in a group fails or a new one joins, Kafka triggers a **Rebalance**. It re-assigns partitions to the remaining members. During this time, the group stops consuming (Stop-the-world). **Cooperative Sticky Rebalancing** is a modern optimization that reduces these pauses, keeping the system stable at scale.'
+    },
+    {
       title: 'Topics and Partitions',
       description: 'A Topic is a logical channel (like a table in a DB) where events are stored. To achieve massive horizontal scalability, a Kafka Topic is divided into multiple Partitions spread across different server nodes (Brokers). Kafka guarantees ordering ONLY within a single partition, not across the whole topic.'
     },
@@ -124,17 +136,19 @@ export const kafka: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Feature', 'Apache Kafka (Event Stream)', 'RabbitMQ (Message Queue)'],
+    headers: ['Feature', 'Apache Kafka (Streaming)', 'Traditional MQ (Messaging)'],
     rows: [
-      ['Data Retention', 'Persisted on disk for a configured time', 'Deleted immediately after consumer ACKs'],
-      ['Topology', 'Pub/Sub via Consumer Groups', 'Complex routing (Direct, Fanout, Topic Exchanges)'],
-      ['Playback/Replay', 'Yes. Just reset the offset to 0.', 'No. Once consumed, the message is gone forever.'],
-      ['Scalability', 'Massive (Millions of msgs/sec)', 'High (Hundreds of thousands msgs/sec)']
+      ['Data Retention', 'Immutable log (Persisted on disk)', 'Transitory queue (Deleted after read)'],
+      ['Topology', 'Pub/Sub via Consumer Offsets', 'Complex Exchange/Binding routing'],
+      ['Replay Capability', 'Extreme (Rewind offset to 0)', 'Impossible (Data is gone)'],
+      ['Ordering', 'Guaranteed within Partition', 'Guaranteed within entire Queue'],
+      ['Consumption Model', 'Poll (Pull-based)', 'Push-based (Usually)']
     ]
   },
   pitfalls: [
-    'Message Ordering: Assuming messages across different partitions will be ordered. If exact ordering matters across all messages, you are forced to use a single partition, completely killing horizontal scalability.',
-    'Poison Pills: If a consumer crashes on a malformed message, it re-polls the same message on restart and crashes endlessly. You must implement Dead Letter Queues (DLQ) and robust error handling to skip bad offsets.',
-    'Partition Skew: Using bad Partition Keys. If 90% of your traffic hashes to Partition A, only one broker takes the load, negating the benefits of parallel processing.'
+    'Message Ordering: Assuming messages across different partitions will be ordered. If order is critical, use a single partition or a high-cardinality Key.',
+    'Poison Pills: A malformed message that crashes the consumer endlessly. Mitigation: Implement a Dead Letter Queue (DLQ) to "parking lot" bad records.',
+    'Partition Skew: Using keys with low cardinality (e.g., `country`) causing one server to be overwhelmed while others are idle.',
+    'Zookeeper dependency (Legacy): Using Zookeeper for metadata in modern clusters. Newer Kafka clusters should use KRaft mode to avoid the extra operational overhead.'
   ]
 };

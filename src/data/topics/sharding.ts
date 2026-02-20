@@ -85,23 +85,32 @@ export const sharding: TopicContent = {
       description: 'Dividing a table by rows. You create multiple identical schemas across different database servers, and place rows in them according to a **Shard Key**. For example, putting all users from America in DB-1, Europe in DB-2, and Asia in DB-3. The query routing tier is responsible for knowing which database holds which user.'
     },
     {
-      title: 'Algorithmic Sharding (Hashing)',
-      description: 'To evenly distribute data, you run a hash function on the Shard Key (e.g., `hash(user_id) % N`). The result dicts which of the `N` shards the data lives on. While this ensures a mathematically even distribution, it makes adding a new shard extremely painful, as changing `N` invalidates all existing hashes, requiring massive data migration (Consisent Hashing solves this).'
+      title: 'Consistent Hashing',
+      description: 'Standard hashing (`hash % N`) is fragile; adding a single node requires re-mapping all data. **Consistent Hashing** maps both shards and keys onto a 360-degree virtual ring. When a shard is added, only 1/N of the data needs to be moved. We use **Virtual Nodes** to ensure that even if physical machines have different capacities, the data remains perfectly distributed.'
+    },
+    {
+      title: 'Directory-Based (Lookup) Sharding',
+      description: 'Instead of an algorithm, we use a separate **Lookup Service** (often a high-performance DB or cache like Redis) to store the mapping of Shard Key -> Shard ID. This provides maximum flexibility (you can move a single "hot" user to their own shard manually), but adds an extra network hop and a new single point of failure that must be highly available.'
+    },
+    {
+      title: 'Resharding & Migration',
+      description: 'As data grows, you eventually need more shards. **Resharding** is the process of moving data between nodes. Strategies include: **Stop-the-world** (taking the DB offline), or **Online Migration** where the system writes to both old and new shards simultaneously while a background process "backfills" the data, eventually cutting over to the new shard.'
     }
   ],
   comparisonTable: {
-    headers: ['Factor', 'Monolithic DB', 'Sharded DB'],
+    headers: ['Factor', 'Monolithic DB', 'Sharded DB (Distributed)'],
     rows: [
       ['Data Capacity', 'Limited by single disk / volume', 'Infinite (Add more nodes)'],
-      ['Compute (CPU/RAM)', 'Limited by motherboard max capability', 'Infinite (Parallel processing across servers)'],
-      ['Joins (SQL)', 'Easy (Standard Relational Integrity)', 'Extremely Hard (Cannot join rows across different shards easily)'],
-      ['Transactions', 'ACID compliant natively', 'Distributed Transactions (Two-Phase Commit) are slow and complex'],
-      ['Cost', 'Exponential (Ultra high-end hardware)', 'Linear (Standard commodity instances)']
+      ['Compute (CPU/RAM)', 'Limited by single motherboard', 'Infinite (Parallel processing)'],
+      ['Joins (SQL)', 'Easy (Local ACID)', 'Extremely Hard (Cross-shard joins)'],
+      ['Transactions', 'ACID natively', 'Distributed (Sagas or 2PC)'],
+      ['Resharding Cost', 'Low (Vertical upgrade)', 'Extremely High (Data migration)']
     ]
   },
   pitfalls: [
-    'Hotspots (Celebrity Problem): If you shard a social network by `user_id`, the system will crash when Justin Bieber (living entirely on Shard 4) posts a photo, overwhelming a single machine while other shards are idle.',
-    'Selecting the wrong Shard Key: The shard key cannot be easily changed once chosen. If you shard by `tenant_id`, one massive enterprise customer could fill up 90% of a single shard.',
-    'Ignoring the operational nightmare: Backups, schema migrations, and index rebuilds must now be orchestrated across dozens of separate, live databases without drift.'
+    'Hotspots (Celebrity Problem): If you shard a social network by `user_id`, the system will crash when Justin Bieber (living entirely on Shard 4) posts a photo. Mitigation includes secondary sharding or salting the shard key for high-traffic entities.',
+    'Selecting the wrong Shard Key: The shard key is immutable. Selecting a key with low cardinality (e.g., `gender`) will result in only 2 massive, unscalable shards.',
+    'Ignoring the Operational Nightmare: Schema migrations and index rebuilds across 100 shards require specialized orchestration tools like Vitess (for MySQL) or Citus (for Postgres) to prevent configuration drift.',
+    'Over-sharding too early: Sharding introduces massive complexity. Many systems can go further with functional partitioning, caching, and read replicas before true horizontal sharding is required.'
   ]
 };

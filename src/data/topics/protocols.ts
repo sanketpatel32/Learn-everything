@@ -121,30 +121,31 @@ export const protocols: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'gRPC (Google Remote Procedure Call)',
-      description: 'Built on HTTP/2. Instead of requesting a URL and getting JSON back (REST), gRPC allows you to call a heavily-typed function on a remote server as if it were a local function. It uses Protocol Buffers (protobufs) to serialize data into binary, making payloads significantly smaller and much faster to serialize/deserialize than JSON text. It is the de-facto standard for Server-to-Server microservice communication.'
+      title: 'gRPC (Binary RPC)',
+      description: 'Built on HTTP/2. Instead of requesting a URL and getting JSON back (REST), gRPC allows you to call a remote server function as if it were a local one. It uses **Protocol Buffers (protobufs)** to serialize data into binary, making payloads notably smaller than JSON. It supports **streaming** (Unidirectional and Bidirectional), making it the gold standard for high-performance internal microservices.'
     },
     {
-      title: 'WebSockets',
-      description: 'HTTP is strictly unidirectional (client requests, server responds). WebSockets upgrade an HTTP connection into a persistent, bidirectional TCP tunnel. This allows the server to instantly "push" data to the client (like a live chat message or stock ticker update) without the client needing to constantly poll the server.'
+      title: 'WebSockets vs SSE (Server-Sent Events)',
+      description: 'While WebSockets provide full-duplex communication, **SSE** is a simpler, unidirectional alternative where the server pushes updates to the client over standard HTTP. SSE is easier to load-balance and automatically handles re-connections. Use WebSockets for interactive games/chat, and SSE for live news feeds or dashboards.'
     },
     {
-      title: 'MQTT (Message Queuing Telemetry Transport)',
-      description: 'A publish-subscribe protocol designed for constrained devices with low bandwidth, high latency, or unreliable networks (IoT, Smart Cars, factory sensors). It has a remarkably small footprint (2-byte header overhead compared to HTTP\'s massive plain-text headers) and guarantees message delivery through QoS (Quality of Service) levels.'
+      title: 'HTTP/3 (The QUIC Protocol)',
+      description: 'The next evolution of HTTP. Unlike previous versions that run on TCP, HTTP/3 runs on **QUIC (built on UDP)**. It solves the "Head-of-Line Blocking" problem where one lost packet stalls all other streams. It also enables **0-RTT connection resumption**, making it incredibly fast for mobile users switching between networks (e.g., WiFi to 5G).'
     }
   ],
   comparisonTable: {
-    headers: ['Protocol', 'Format', 'Connection Type', 'Primary Use Case', 'Pros'],
+    headers: ['Protocol', 'Transport', 'Direction', 'Efficiency', 'Best For'],
     rows: [
-      ['REST / HTTP 1.1', 'JSON (Text)', 'Stateless (Req/Res)', 'Public Facing APIs, CRUD', 'Universally supported, easy to debug'],
-      ['gRPC / HTTP 2.0', 'Protobuf (Binary)', 'Multiplexed / Streaming', 'Internal Microservices', 'High performance, strict typing'],
-      ['WebSockets', 'Text / Binary', 'Stateful Bidirectional', 'Live Chat, Real-time Gaming', 'Zero latency server pushes'],
-      ['MQTT', 'Binary', 'Pub/Sub (via Broker)', 'IoT Devices, Sensors', 'Extremely lightweight, reliable on bad networks']
+      ['REST (HTTP/1.1)', 'TCP', 'Unidirectional', 'Medium (Plaintext)', 'Public APIs'],
+      ['gRPC (HTTP/2)', 'TCP', 'Bidirectional', 'Very High (Binary)', 'Internal Comms'],
+      ['WebSockets', 'TCP', 'Bidirectional', 'High (Persistent)', 'Real-time Chat'],
+      ['HTTP/3 (QUIC)', 'UDP', 'Unidirectional+', 'Extreme (No HOLB)', 'Web Performance']
     ]
   },
   pitfalls: [
-    'Using gRPC for the browser frontend. Browsers do not have full native support for HTTP/2 trailing headers, forcing the use of `gRPC-Web` proxies which adds architectural complexity. Stick to REST or GraphQL for the frontend.',
-    'WebSocket statefulness: Load balancing WebSockets is notoriously difficult. Since the connection is persistent, scaling out requires "Sticky Sessions" or a central Pub/Sub backplane (like Redis) so servers can route messages to the node holding the specific user\'s socket.',
-    'Ignoring Long-Polling. Before defaulting to complex WebSockets, remember that HTTP Long-Polling or Server-Sent Events (SSE) might be vastly simpler and perfectly adequate for basic one-way "push" notifications.'
+    'Using gRPC for the browser frontend: Browsers lack full native HTTP/2 trailer support, requiring a `gRPC-Web` proxy. REST/GraphQL are usually better for user-facing clients.',
+    'Head-of-Line Blocking in HTTP/2: While HTTP/2 allows multiple requests on one TCP connection, a single lost packet still stalls the entire connection. HTTP/3 (QUIC) is required to fix this.',
+    'WebSocket Scaling: Sticky sessions are mandatory because the socket is tied to one server. Use a Redis message bus to sync state across nodes.',
+    'Ignoring SSE: For simple server-to-client notifications, WebSockets are often overkill. SSE uses standard HTTP and is much easier to manage operationally.'
   ]
 };

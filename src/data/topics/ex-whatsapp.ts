@@ -106,34 +106,32 @@ export const whatsapp: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Persistent Connections (WebSockets)',
-      description: 'Unlike HTTP where the client polls the server, Chat requires the server to push data instantly. Clients maintain a long-lived TCP/WebSocket connection with a specific Chat Server.'
+      title: 'End-to-End Encryption (Signal Protocol)',
+      description: 'Security is paramount. WhatsApp uses the **Signal Protocol** for E2EE. Each message is encrypted on the sender\'s device and can only be decrypted by the recipient. The server acts as a "blind relay"—it stores the encrypted blob but has zero knowledge of the content. This is achieved via a **Double Ratchet Algorithm** and key-exchange (X3DH).'
     },
     {
-      title: 'Session Management (Redis Key-Value)',
-      description: 'Since User A and User B might be connected to completely different servers out of thousands, a fast KV store like Redis maps `UserId -> ServerId`. SVR_1 looks up Redis to find that User B is connected to SVR_2.'
+      title: 'Delivery Receipts (The Three Ticks)',
+      description: 'How do you know if a message was delivered? 1) **Single Tick**: Message reached the server. 2) **Double Tick**: Server pushed message to the receiver and got an ACK back. 3) **Blue Tick**: Receiver opened the app and the client sent a "Read" status update. These are handled via high-speed asynchronous event streams to avoid blocking the main chat flow.'
     },
     {
-      title: 'Message Routing (Pub/Sub)',
-      description: 'Once SVR_1 knows User B is on SVR_2, it publishes the message to a message bus (like Redis Pub/Sub, Kafka, or RabbitMQ) targeted at SVR_2. SVR_2 picks it up and pushes it down the WebSocket to User B.'
-    },
-    {
-      title: 'Storage & History (Wide-Column NoSQL)',
-      description: 'Chat generates massive write-heavy data (billions of messages/day). Cassandra or HBase is used because they excel at rapid writes and fast sequential range queries (fetching the last 50 messages of a chat thread).'
+      title: 'Presence & Last Seen',
+      description: 'Tracking status for 2 billion users is expensive. Instead of constant polling, clients send a **Heartbeat** every 30-60 seconds. If the connection drops, the status switches to "Offline". To save server resources, "Last Seen" updates are often processed via a **Push-to-Followers** model using a fast cache (Redis).'
     }
   ],
   comparisonTable: {
-    headers: ['Feature', 'WhatsApp (Consumer)', 'Slack (Enterprise/Groups)'],
+    headers: ['Feature', 'WhatsApp (Consumer)', 'Slack (Enterprise)'],
     rows: [
-      ['Primary Focus', 'E2E Encryption & Low Latency', 'Persistence & Channel History'],
-      ['Connection', 'Long-lived WebSockets', 'WebSockets + Polling fallback'],
-      ['Storage', 'Local-first, ephemeral on server', 'Centralized history & search'],
+      ['Privacy Model', 'End-to-End Encrypted (Server is blind)', 'Server-side storage (Company searchable)'],
+      ['Sync Model', 'Device-centric (Message syncing is hard)', 'Cloud-centric (Instant history on all devices)'],
+      ['Persistence', 'Limited (Usually stored locally)', 'Permanent (Stored in cloud indefinitely)'],
+      ['Scalability Limit', 'High (Billions of active users)', 'Medium (Optimized for large organizations)']
     ]
   },
   videoUrl: 'https://www.youtube.com/watch?v=vvhC64hQZMk',
   pitfalls: [
-    'Sticky Sessions / Rebalancing: If SVR_2 crashes, 100,000 users disconnect at once. They will all immediately reconnect, causing a "thundering herd" problem. The LB must employ jitter and rate-limiting to prevent cascading failures.',
-    'Message Ordering: Guaranteeing chronological order across distributed nodes relies on generating time-sortable SnowFlake IDs at the source, rather than relying on global database auto-increments.',
-    'Polling: Using standard HTTP short-polling or long-polling drains mobile batteries rapidly and creates massive CPU overhead on servers. WebSockets are mandatory for scale.'
+    'Message Re-delivery: If User B is offline for 2 weeks, storing 50,000 pending messages in expensive RAM (Redis) is wasteful. Offline messages are usually overflowed to a disk-based store (Cassandra) and cleared upon delivery.',
+    'Fan-out in Large Groups: If a user sends a message to a group of 1000, 1000 individual pushes happen. This is handled by a separate "Group Dispatcher" service to keep individual chat servers responsive.',
+    'Privacy vs Sync: E2EE makes "Multi-device" support hard. Each message must be encrypted separately for each of the recipient\'s 5 devices, or keys must be synced securely in the background.',
+    'Ignoring Network Jitter: On weak mobile networks (2G/3G), WebSockets may flap constantly. Robust retry logic with exponential backoff and "Message Sequence IDs" are critical to prevent duplicates.'
   ]
 };

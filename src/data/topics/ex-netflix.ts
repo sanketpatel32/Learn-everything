@@ -108,34 +108,36 @@ export const netflix: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Control Plane vs Data Plane',
-      description: 'Netflix separates "clicking around the UI" (Control Plane) from "actually watching the video" (Data Plane). The Control Plane runs entirely on AWS microservices. Once you hit "Play", the Control Plane tells your client exactly which CDN server handles the video file, and the client streams directly from the Data Plane, completely bypassing AWS.'
+      title: 'Transcoding Pipeline (Archer)',
+      description: 'A raw movie (Mezzanine file) is massive. Netflix uses its **Archer** microservice to split it into 3-second chunks. These are transcoded in parallel into thousands of combinations of codecs (H.264, VP9, AV1), resolutions, and bitrates. This ensures the best quality for any device, from an iPhone with 3G to a 4K Smart TV with Fiber.'
     },
     {
-      title: 'Open Connect (Custom CDN)',
-      description: 'Netflix does not use Akamai or Cloudflare for video. They build their own hardware servers holding terabytes of SSDs containing Netflix titles. They literally mail these physical servers to local Internet Service Providers (Comcast, AT&T) worldwide. When you watch Netflix, you are often streaming from a box sitting 5 miles from your house.'
+      title: 'Open Connect Appliances (OCA)',
+      description: 'Netflix doesn\'t rely on generic CDNs like Cloudflare. They build custom hardware—**Open Connect Appliances (OCAs)**—which are rackable servers with 200TB+ of SSD storage. These are installed directly inside ISP data centers globally. When you press Play, your traffic never leaves your ISP\'s network, drastically reducing peering costs and latency.'
     },
     {
-      title: 'Video Transcoding & Chunking',
-      description: 'A raw movie file is massive. Netflix splits it into 3-second "Chunks". Each chunk is fed into a massive parallel computing fleet that encodes the 3-second clip into dozens of different formats (4K, 1080p, 720p, 480p) and bitrates.'
+      title: 'Predictive Caching & Pre-positioning',
+      description: 'Netflix predicts which movies will be popular in specific regions using ML. During off-peak hours (like 2 AM), they "flood" the global OCAs with high-demand content (e.g., *Squid Game* season 2). This prevents ISP congestion during prime time when everyone tries to watch the same new release simultaneously.'
     },
     {
       title: 'Adaptive Bitrate Streaming (DASH/HLS)',
-      description: 'The Netflix client on your TV is constantly monitoring your internet speed. If your Wi-Fi suddenly drops, the client automatically requests the next 3-second chunk in 480p instead of 4K. Because the video is pre-chunked on the CDN, the transition is seamless with zero buffering.'
+      description: 'Using protocols like **DASH** (Dynamic Adaptive Streaming over HTTP), the Netflix client monitors Wi-Fi health in real-time. If bandwidth drops, the client seamlessly requests the next 3-second chunk at a lower bitrate without the user noticing a pause or buffering wheel.'
     }
   ],
   comparisonTable: {
-    headers: ['Feature', 'Netflix (Global Streaming)', 'YouTube (UGC Content)'],
+    headers: ['Factor', 'Netflix (Global Streaming)', 'YouTube (UGC Content)'],
     rows: [
-      ['Content Type', 'High-quality Studio Produced', 'User Generated Content'],
-      ['Storage Depth', 'Predictable (Catalog size)', 'Massive (Hours uploaded/min)'],
-      ['Delivery', 'Massive Edge CDN (Open Connect)', 'Global Google CDN (GGC)'],
+      ['Content Volume', 'Predictable (Studio library)', 'Infinite (500+ hrs/min uploaded)'],
+      ['Quality Control', 'Strict (Pre-encoded by Netflix)', 'Variable (User defined)'],
+      ['CDN Architecture', 'Custom Edge (OCAs inside ISPs)', 'Google Global Cache (GGC)'],
+      ['Encryption', 'DRM (Widevine/FairPlay)', 'Standard HTTPS']
     ]
   },
   videoUrl: 'https://www.youtube.com/watch?v=VvZf7lISfgs',
   pitfalls: [
-    'Serving Video through the API Gateway: A classic beginner mistake. Text data (JSON) and Video data must travel completely different paths. Routing a 4K video stream through your user-auth microservice will instantly bottleneck and crash your entire system.',
-    'Transcoding on the Fly: Video encoding is extremely CPU intensive. You cannot transcode a movie at the exact moment a user hits "Play". All formatting and chunking must happen asynchronously when the movie is first added to the library.',
-    'Not Predicitive Caching: Netflix does not push the entire catalog to every OCA box. They use ML to predict what will be popular tomorrow (e.g., a new season of Stranger Things) and proactively push just those chunks to the edge caches during off-peak night hours.'
+    'Serving Video through the API Gateway: Video traffic (Data Plane) must bypass your auth/business logic microservices (Control Plane) to avoid catastrophic bottlenecks.',
+    'Transcoding on the Fly: Too expensive and slow. All content must be pre-encoded in every possible permutation before it is added to the catalog.',
+    'Ignoring DRM: Premium content requires Digital Rights Management (Widevine, PlayReady). Securely managing keys and license servers at scale is a complex architectural requirement.',
+    'Inefficient Pre-positioning: Pushing the whole catalog everywhere. OCAs should only store the content relevant to local tastes and recent releases to maximize cache hit ratios.'
   ]
 };

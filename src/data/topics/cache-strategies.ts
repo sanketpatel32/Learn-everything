@@ -104,29 +104,30 @@ export const cacheStrategies: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Cache-Aside (Lazy Loading)',
-      description: 'The most common strategy. The application asks the cache for data. If it\'s there (Cache Hit), return it. If not (Cache Miss), the application fetches it from the Database, writes it to the Cache, and then returns it. Data is only loaded into the cache "on demand". This saves RAM, but the *first* user to request data suffers a slow response due to the cache miss.'
+      title: 'Common Eviction Policies',
+      description: 'Since cache RAM is finite, we must decide what to delete when the cache is full. **LRU (Least Recently Used)** discards the least recently accessed items. **LFU (Least Frequently Used)** discards items accessed least often over time. **FIFO (First In, First Out)** is simple but often suboptimal. **TTL (Time to Live)** automatically expires data after a set period, ensuring it doesn\'t stay stale forever.'
     },
     {
-      title: 'Write-Through',
-      description: 'The application treats the cache as the main data store. When saving data, the application writes to the Cache, and the Cache *synchronously* writes to the Database. The operation does not return success until BOTH systems have safely stored the data. This guarantees data consistency, but makes write operations significantly slower since they must traverse two network hops.'
+      title: 'Serialization & Performance',
+      description: 'The CPU cost of turning objects into strings (Serialization) is often the bottleneck in caching. **JSON** is human-readable but slow and bulky. **Protobuf** or **MessagePack** are binary formats that are significantly faster and smaller, reducing network bandwidth between the App and the Cache Cluster.'
     },
     {
-      title: 'Write-Back (Write-Behind)',
-      description: 'The application writes data to the Cache, and the Cache immediately returns "Success" to the user. Behind the scenes, the Cache asynchronously queues the data to be written to the Database eventually (often in batches). This provides insanely fast writes (in memory speeds), but comes with extreme risk: if the Cache server loses power before syncing to the DB, the data is permanently lost.'
+      title: 'Cache Invalidation',
+      description: 'The hardest problem in CS. You can invalidate data by: 1) **TTL** (Waiting for it to expire). 2) **Explicit Purge** (Deleting the key when the DB is updated). 3) **Versioning** (Adding a version to the key, e.g., `user:1:v2`, so the old version is never read again).'
     }
   ],
   comparisonTable: {
-    headers: ['Strategy', 'Read Speed', 'Write Speed', 'Data Consistency', 'Risk of Data Loss'],
+    headers: ['Strategy', 'Read Speed', 'Write Speed', 'In-RAM Efficiency', 'Data Safety'],
     rows: [
-      ['Cache-Aside', 'Fast (Except 1st Miss)', 'Normal DB Speed', 'Can become stale', 'None'],
-      ['Write-Through', 'Always Fast', 'Slowest (2 hops)', 'Always Consistent', 'None'],
-      ['Write-Back', 'Always Fast', 'Fastest (RAM Speed)', 'Eventually Consistent', 'High (If cache crashes)']
+      ['Cache-Aside', 'Fast (Hits only)', 'Direct DB Speed', 'High (Selective)', 'High'],
+      ['Write-Through', 'Always Fast', 'Slow (Double write)', 'High (Immediate)', 'High'],
+      ['Write-Back', 'Always Fast', 'Fastest (RAM)', 'High (Buffered)', 'Low (Risk of loss)']
     ]
   },
   pitfalls: [
-    'The "Thundering Herd" on Cache Expiry: If a highly trafficked key (like the homepage of Reddit) expires from the cache, 10,000 incoming requests will all experience a Cache Miss and hit the database simultaneously, instantly crashing it. Use Cache Locking / Mutual Exclusion to solve this.',
-    'Ignoring Eviction Policies: RAM is expensive and limited. You must configure how the cache boots out old data when it gets full (e.g., LRU - Least Recently Used, LFU - Least Frequently Used).',
-    'Caching everything: Only cache read-heavy data that changes infrequently. Caching highly volatile data (like a real-time stock ticker or a user\'s current GPS coordinates) causes massive network overhead constantly refreshing the cache for no benefit.'
+    'The "Thundering Herd" on Cache Expiry: If a hot key expires, thousands of requests hit the DB at once. Mitigation: Use "Cache-Aside with Mutex" (only one worker fetches while others wait/read old value) or staggered TTLs.',
+    'Ignoring Serialization overhead: Reading 1MB of JSON from Redis can take 10ms just to parse. Use binary formats for large objects.',
+    'Stale Data: Assuming the cache is always correct. Always implement a "Version" or "Last Modified" check if absolute consistency is required.',
+    'Caching highly volatile data: Caching real-time stock prices or GPS coordinates creates more network load (constant invalidation) than just reading from the primary source.'
   ]
 };

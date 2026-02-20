@@ -115,34 +115,36 @@ export const instagram: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Decoupling Metadata from Blobs',
-      description: 'You never store a 4MB picture directly in a SQL database alongside user data (row logic). You store the massive bytes in an Object Store (Amazon S3) which is "dumb" but infinitely scalable. The SQL database (Metadata DB) only stores a tiny 100-byte row explaining *who* uploaded it, the *caption*, and the `Image_S3_URL` string.'
+      title: 'Logical vs Physical Sharding',
+      description: 'Instagram shards its metadata across thousands of **Logical Shards** mapped to a smaller set of **Physical Databases**. By using logical shards (e.g., 8192 shards), they can easily rebalance the system by moving a few logical shards from one physical server to another as traffic grows, without having to reshard the entire dataset.'
     },
     {
-      title: 'CDN Edge Delivery',
-      description: 'If S3 is hosted in Virginia, a Japanese user downloading a 4MB photo receives terrible latency. A Content Delivery Network (CDN like Cloudflare or Akamai) fixes this. The user requests the image from a Tokyo CDN node. If it isn\'t there (Cache Miss), the Node fetches it from Virginia S3, saves a copy locally, and serves the user. All future users in Asia then load it instantly from the Tokyo cache.'
+      title: 'Feed Generation & Ranking',
+      description: 'The feed isn\'t just chronological. It is **Ranked** using ML. For each user, the system identifies "candidate" posts from followed accounts, then passes them through a heavy-weight ranking model that scores them based on the likelihood of engagement (likes, comments, time spent). The highest-scoring posts are delivered first.'
     },
     {
-      title: 'Reliable Unique ID Generation',
-      description: 'Instagram cannot rely on single-node Auto-Increment Databases (like `id++`). They must shard across thousands of databases. They use customized 64-bit Timestamp-based IDs composed of 41 bits (Custom Epoch Time), 13 bits (Database Shard ID), and 10 bits (Auto-increment ID). This ensures every photo globally has a unique chronological integer.'
+      title: 'Media Storage Tiers (Cold vs Hot)',
+      description: 'Storing exabytes of photos is expensive. Instagram uses a tiered approach. New/Viral photos are kept in high-performance **SSD Storage** and cached aggressively in CDNs. As photos age and become "Cold Content", they are moved to cheaper, higher-density **HDD Storage** (like Amazon S3 Glacier or cold-storage pools).'
     },
     {
-      title: 'Aggressive Image Optimization',
-      description: 'No one downloads original 12-Megapixel iPhone photos. Background workers instantly resize uploaded images into 3 standardized resolutions (e.g., Small, Medium, Large) and convert them to modern formats (WebP). The DB stores 3 localized URLs.'
+      title: 'ID Generation (Postgres/SnowFlake)',
+      description: 'Instagram uses a customized 64-bit ID. 41 bits for timestamp, 13 bits for the shard ID, and 10 bits for a local sequence number. This allows them to generate unique, k-sortable IDs independently across thousands of database nodes without a central "ID Master" bottleneck.'
     }
   ],
   comparisonTable: {
-    headers: ['Feature', 'Relational DB (Posts)', 'Object Storage (Media)'],
+    headers: ['Factor', 'Primary Metadata (Postgres)', 'Object Storage (Media)'],
     rows: [
-      ['Data Type', 'Metadata & Relations', 'Binary Images/Videos'],
-      ['Scalability', 'Sharded Clusters', 'Global Edge CDN'],
-      ['Primary Need', 'Strict consistency', 'High throughput & global reach'],
+      ['Data Type', 'User info, follows, captions', 'Binary Photos & Videos'],
+      ['Storage Tech', 'Heavily Sharded SQL', 'Amazon S3 / Custom Blobs'],
+      ['Scaling Unit', 'Logical Shards (8192+)', 'Global Edge PoPs (CDNs)'],
+      ['Latency Target', 'Ultra-low (< 50ms index)', 'Medium (100ms+ for first byte)']
     ]
   },
   videoUrl: 'https://www.youtube.com/watch?v=QmX2NPkJTKg',
   pitfalls: [
-    'Putting Images through API bounds: If an App Server intercepts and reads a 5MB image from S3, and then passes it out to the client, the Application Server will max out its Network Interface Card (NIC bandwidth) and crash. App Servers should only deal with JSON and JSON URLs.',
-    'Hot DB Shards: If Leonardo DiCaprio posts an image, millions of likes flood to `PhotoID_88`. That single Database Shard must process 10,000 updates a second. Write queries must hit Redis or Memcached arrays first to aggregate counting.',
-    'Unpredictable Cache Eviction: S3 storage scales forever. CDN edge nodes do not. If you do not configure LRU (Least Recently Used) cache eviction smartly depending on geo-location photo popularity, you waste exabytes of expensive Edge transfer.'
+    'Metadata/Blob Tight Coupling: Passing heavy binary data through the app server. Using Pre-signed URLs for S3 allows the client to upload/download directly, bypassing the app server completely.',
+    'Ignoring Write Skew on Popular Posts: When a global celebrity posts, the database "shard" holding that post will melt. Use a write-through cache to aggregate likes before persisting to the DB.',
+    'Underestimating Resharding Costs: Not using logical shards from Day 1. Moving data between physical nodes without a logical abstraction requires massive downtime and manual migration.',
+    'Over-caching in CDNs: Caching private images or deleted content. Use signed cookies and tight TTLs (Time to Live) for non-public assets.'
   ]
 };

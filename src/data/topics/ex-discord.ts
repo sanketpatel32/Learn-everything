@@ -126,34 +126,36 @@ export const discord: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Gateway Cluster (WebSocket Management)',
-      description: 'Holding millions of TCP connections open is memory intensive. Discord uses thousands of stateless Gateway nodes. When a user connects, the connection is bound to a specific Gateway. The Gateway informs the Session Manager (Redis) "User_123 is connected to Gateway_89".'
+      title: 'Gateway Service (WebSocket Cluster)',
+      description: 'Discord uses thousands of **Gateway** nodes (written in Elixir/Go) to maintain millions of persistent WebSockets. The Gateway is responsible for re-ordering events and ensuring reliability over high-latency connections. It uses a "Session Resume" mechanism to allow clients to reconnect within a short window without losing message context.'
     },
     {
-      title: 'Message Fanout (The Pub/Sub Routing Problem)',
-      description: 'When User A posts in a server with 100,000 members, the naive approach is to loop 100k times to send the message. This crashes systems. Discord instead checks the Session Manager to see which users are *actually online*, groups them by the Gateway they are connected to, and sends *one* payload to the Gateway. The Gateway then pushes it down the open WebSockets.'
+      title: 'Guilds & Horizontal Sharding',
+      description: 'In Discord, a server is called a **Guild**. Each guild is essentially a shard. To manage massive guilds (e.g., 1M+ members), the system shards guilds across different DB clusters. Data like channel permissions and roles are cached aggressively in-memory to ensure instant access when a user joins a channel.'
     },
     {
-      title: 'Cassandra for Messaging',
-      description: 'Discord initially used MongoDB, but migrated to Cassandra (and later ScyllaDB) because messaging is a strictly Time-Series append-only workload with high write throughput. Cassandra handles massive writes and allows partitioning by `Channel_ID` to ensure all messages for a single chat load contiguously off the disk.'
+      title: 'Message Storage (ScyllaDB)',
+      description: 'Messaging is a write-heavy, time-series workload. Discord migrated from Cassandra to **ScyllaDB** to achieve better tail latency and reduce operational overhead. They use a **Bucket-based Partitioning** strategy where messages are grouped (e.g., 10 days of messages per bucket) to prevent partitions from growing too large over time.'
     },
     {
-      title: 'Presence Service (Online/Offline Status)',
-      description: 'Updating a database every time a user types or goes idle scales terribly. Gateways send heartbeat updates (e.g., every 30s) to a Presence Service powered by Redis. These status changes are batched and emitted via Kafka to be beamed out to friends lists, avoiding DB write storms.'
+      title: 'Read States (The Red Dot)',
+      description: 'Tracking which messages every user has read in every server is a massive KV problem. Discord uses a specialized **Read State Service** that tracks the `last_message_id` read by a user per channel. This is stored in a highly optimized KV store to ensure the "red dot" notification disappears instantly across all devices.'
     }
   ],
   comparisonTable: {
-    headers: ['Feature', 'Discord (Massive Groups)', 'WhatsApp (DM Focused)'],
+    headers: ['Factor', 'Discord (Massive Servers)', 'WhatsApp (1:1 / Small Groups)'],
     rows: [
-      ['Connection Scale', 'Millions per gateway', 'Thousands per gateway'],
-      ['Message Fan-out', 'Huge (Server members)', 'Small (Groups/Individuals)'],
-      ['Privacy Model', 'Semi-public servers', 'End-to-End Encrypted'],
+      ['Connection Complexity', 'Gateway Sharding (Stateless)', 'Sticky Session WebSockets'],
+      ['Message Fan-out', 'Broadcast to 1M+ (Pub/Sub)', 'Point-to-point (Direct Relays)'],
+      ['Storage Tech', 'ScyllaDB / Cassandra', 'MySQL / Local Storage'],
+      ['Privacy', 'Public/Private Guilds', 'End-to-End Encrypted DMs']
     ]
   },
   videoUrl: 'https://www.youtube.com/watch?v=okrR1KXNLtA',
   pitfalls: [
-    'Connection Draining: If you deploy an update to a Gateway server, you will disconnect 500,000 concurrent users at once. They will all instantly try to reconnect, creating a Thundering Herd that brings down your Auth service. Deployments must use slow connection draining limits.',
-    'Presence "Flapping": Users dropping internet for 2 seconds shouldn\'t instantly trigger system-wide "User is Offline" -> "User is Online" broadcasts. Implement a delay (e.g., 60 seconds) before officially marking a dropped connection as offline.',
-    'Hot Channels: A channel in a server with 1 million users (like a popular game launch) can overwhelm its Cassandra partition. Hot partitions must scatter-gather or be split to prevent single-node meltdowns.'
+    'Universal Fan-out in Huge Guilds: Sending individual messages to 1M users. Use Gateway-side filtering to only send payloads to servers where users are *currently* active.',
+    'Presence "Flapping": Instantly broadcasting offline status for every 1s Wi-Fi blip. Use a "Doubt" or "Grace Period" timer before emitting status changes.',
+    'Ignoring ScyllaDB Anti-patterns: Creating unbounded partitions for very long-lived channels. Message bucketing is necessary to keep partition sizes manageable.',
+    'WebSocket Thundering Herd: If a Gateway node fails, 500k users reconnect simultaneously. Authenticating all of them at once will crash the Auth DB. Implement slow-ramp reconnection pacing.'
   ]
 };

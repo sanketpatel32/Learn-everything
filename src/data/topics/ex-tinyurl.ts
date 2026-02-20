@@ -100,34 +100,37 @@ export const tinyurl: TopicContent = {
   `,
   keyPoints: [
     {
-      title: 'Encoding Scheme (Base62)',
-      description: 'URLs are shortened by converting a database auto-increment ID into a Base62 string (a-z, A-Z, 0-9). For example, ID `1` = `a`, ID `125` = `cb`. A 7-character Base62 string provides 62^7 = ~3.5 Trillion unique hashes, plenty for a system projected to live for 50 years.'
+      title: 'Encoding Strategy (Base62 vs MD5)',
+      description: 'Using a counter (base 10) converted to Base62 is superior to MD5/MurmurHash as it avoids collisions entirely. A 7-character string in Base62 ($[a-zA-Z0-9]$) supports $62^7 \\approx 3.5$ trillion combinations.'
     },
     {
-      title: 'Distributed ID Generation',
-      description: 'You cannot use a single SQL database for auto-incrementing IDs at massive scale—it becomes a bottleneck. Instead, use a Ticket Server (or ZooKeeper). An API server requests a "block" of IDs (e.g., 1 to 1000). The API server then independently loops through these IDs in memory. If the server crashes, those IDs are lost, but it prevents DB collision.'
+      title: 'Key Generation Service (KGS)',
+      description: 'To solve the bottleneck of a single SQL auto-increment, a dedicated KGS (using ZooKeeper) distributes "ranges" of keys (e.g., 1M-2M) to different application servers. This allows servers to generate unique short IDs in-memory without cross-node locks.'
     },
     {
-      title: 'Caching Strategy',
-      description: 'TinyURL is incredibly read-heavy (usually a 100:1 read-to-write ratio). Every redirect checks Redis first. If the hash is found, it bypasses the database entirely. Cache eviction policies (like LRU) ensure only actively clicked links take up expensive RAM.'
-    },
-    {
-      title: 'HTTP Redirection (301 vs 302)',
-      description: 'The API returns a 301 (Permanent Redirect) if you want the browser to cache the translation locally (lowers server load). It returns a 302 (Temporary Redirect) if you need to track analytics (click rates, locations) for every single click.'
+      title: 'High-Performance Redirection',
+      description: 'TinyURL is 99% reads. Redirections are optimized via Redis using a standard `GET {hash}`. Cache misses trigger a DB lookup which then populates the cache for future requests using an LRU eviction policy.'
     }
   ],
   comparisonTable: {
-    headers: ['Approach', 'How it works', 'Pros', 'Cons'],
+    headers: ['Factor', '301 (Permanent)', '302 (Temporary)', 'Impact'],
     rows: [
-      ['Random MD5 Hashing', 'Compute MD5 of long URL, take first 7 chars. Handle collisions iteratively.', 'Stateless, same URL always yields same hash.', 'Collisions are inevitable and resolving them requires DB trips.'],
-      ['Base62 with Counter', 'Use a global counter/ID, convert base 10 to base 62 string.', 'Guaranteed zero collisions. Extremely fast.', 'Sequential IDs are guessable (predictable URLs).'],
-      ['Snowflake IDs', 'Generate Twitter Snowflake ID -> Base62', 'Sortable, highly distributed, collision-resistant.', '64-bit ID usually results in an 11-character hash instead of 7.']
+      ['Browser Behavior', 'Caches locally', 'Re-requests every time', '301 reduces server load.'],
+      ['SEO/Analytics', 'Hard to track clicks', 'Easy to track every click', '302 gives better insights.'],
+      ['Link Juice', 'Transferred to target', 'Minimal transfer', '301 is better for SEO.'],
     ]
   },
-  videoUrl: 'https://www.youtube.com/watch?v=AVztRY77xxA',
+  videoUrl: 'https://www.youtube.com/watch?v=fMZMm_0ZhK4',
+  approaches: [
+    {
+      title: 'KGS + Pre-Allocation Template',
+      content: '```python\n# API Server Logic\nclass ShortenerServer:\n    def __init__(self, kgs_client):\n        self.current_range = kgs_client.get_new_block() # e.g., (1000, 2000)\n        self.pointer = self.current_range[0]\n\n    def generate_short(self, long_url):\n        id = self.get_next_id()\n        hash = base62_encode(id)\n        db.save(id, hash, long_url)\n        return hash\n```',
+      complexity: { time: 'O(1) in-memory', space: 'O(1)' }
+    }
+  ],
   pitfalls: [
-    'Relying purely on a relational database auto-increment: If you scale horizontally to 10 API servers, they cannot efficiently coordinate hitting the DB for the next ID at 10,000 Writes/sec. An ID generation strategy (like ticketing) is mandatory.',
-    'Not utilizing an LRU Cache: Querying an indexed DB table for billions of URLs is fast, but handling 100,000 Reads/sec will still saturate DB connections and I/O. Memory caching is a non-negotiable requirement for this architecture.',
-    'Ignoring malicious behavior: Rate limiting must be discussed. Abusers can write a script to generate billions of TinyURLs, exhausting the 3.5 trillion address space and inflating database storage costs.'
+    'Capacity Planning: billons of URLs consume Terabytes of storage. Using a NoSQL store like Cassandra facilitates easier horizontal sharding by URL hash.',
+    'Guessable URLs: Sequential IDs allow bots to "crawl" your entire database. Add a random salt or shuffle the Base62 alphabet to make tokens non-sequential.',
+    'Dead Client IDs: If an API server crashes, its pre-allocated block of IDs is lost. This is an acceptable trade-off for speed and complexity.'
   ]
 };

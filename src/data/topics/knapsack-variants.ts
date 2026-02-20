@@ -39,32 +39,76 @@ export const knapsackVariants: TopicContent = {
       }
     }
   ],
-  pitfalls: [
-    'Loop direction differs by variant: 0/1 uses descending capacity, unbounded uses ascending.',
-    'Defining state poorly (missing index or capacity) causes invalid transitions.',
-    'Large capacity values can make pseudo-polynomial DP too slow or memory-heavy.',
-    'Using `int` with huge value sums can overflow in fixed-width languages.'
+  diagram: `
+<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto drop-shadow-2xl">
+  <defs>
+    <linearGradient id="takeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.1" />
+    </linearGradient>
+    <linearGradient id="skipGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.1" />
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="800" height="400" fill="#0f172a" rx="16" stroke="#1e293b"/>
+
+  <!-- Decision Tree / State Table -->
+  <text x="50" y="40" fill="#64748b" font-size="14" font-weight="bold">Decision at State (i, Capacity)</text>
+  
+  <g transform="translate(300, 100)">
+    <!-- Base Node -->
+    <rect x="-60" y="-30" width="120" height="60" fill="#1e293b" rx="8" stroke="#334155" stroke-width="2"/>
+    <text x="0" y="5" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="middle">f(i, cap)</text>
+
+    <!-- Take Path -->
+    <path d="M -60 30 L -150 120" stroke="#10b981" stroke-width="2" fill="none" stroke-dasharray="4"/>
+    <rect x="-210" y="120" width="120" height="60" fill="url(#takeGrad)" rx="8" stroke="#10b981" stroke-width="2"/>
+    <text x="-150" y="145" fill="#f8fafc" font-size="12" font-weight="bold" text-anchor="middle">TAKE ITEM i</text>
+    <text x="-150" y="165" fill="#a7f3d0" font-size="10" text-anchor="middle">val[i] + f(i+1, cap-wt[i])</text>
+
+    <!-- Skip Path -->
+    <path d="M 60 30 L 150 120" stroke="#ef4444" stroke-width="2" fill="none" stroke-dasharray="4"/>
+    <rect x="90" y="120" width="120" height="60" fill="url(#skipGrad)" rx="8" stroke="#ef4444" stroke-width="2"/>
+    <text x="150" y="145" fill="#f8fafc" font-size="12" font-weight="bold" text-anchor="middle">SKIP ITEM i</text>
+    <text x="150" y="165" fill="#fca5a5" font-size="10" text-anchor="middle">f(i+1, cap)</text>
+  </g>
+
+  <!-- DP Table Intuition -->
+  <rect x="50" y="280" width="700" height="80" fill="#1e293b" rx="8" stroke="#334155"/>
+  <text x="400" y="305" fill="#94a3b8" font-size="14" font-weight="bold" text-anchor="middle">The "Magic" of 1D Space Optimization</text>
+  <text x="400" y="330" fill="#cbd5e1" font-size="12" text-anchor="middle">0/1 Knapsack: Loop Capacity BACKWARDS (W to wt[i]) to use previous row's state.</text>
+  <text x="400" y="350" fill="#cbd5e1" font-size="12" text-anchor="middle">Unbounded: Loop Capacity FORWARDS (wt[i] to W) to allow reuse of current item.</text>
+</svg>
+  `,
+  keyPoints: [
+    {
+      title: 'State Definition',
+      description: 'The standard state is $dp[i][c]$, representing the maximum value using first $i$ items with total capacity $c$.'
+    },
+    {
+      title: 'Space Complexity Trick',
+      description: 'You can reduce space from $O(N \\times W)$ to $O(W)$ by only keeping the previous row (or even just one row with a specific loop direction).'
+    },
+    {
+      title: 'Difference in Transitions',
+      description: 'In 0/1, you either take an item or skip it ($i \\to i+1$). In Unbounded, taking an item allows you to stay at index $i$ ($i \\to i$).'
+    }
   ],
+  comparisonTable: {
+    headers: ['Variant', 'Item Usage', 'Capacity Loop Direction', 'Recursive Branch'],
+    rows: [
+      ['0/1 Knapsack', 'Exactly once', 'Outer: 0 to N, Inner: W down to 0', '`max(pick[i+1], skip[i+1])`'],
+      ['Unbounded', 'Infinite times', 'Outer: 0 to N, Inner: 0 up to W', '`max(pick[i], skip[i+1])`'],
+      ['Bounded', 'At most K times', 'Binary Splitting into 0/1', 'Variable'],
+    ]
+  },
+  videoUrl: 'https://www.youtube.com/watch?v=nLmhmB6NzcM',
   concepts: [
     {
-      name: 'State and Transition',
-      details:
-        'DP success depends on clear state definition and exhaustive valid transitions.'
-    },
-    {
-      name: 'Pseudo-polynomial Complexity',
-      details:
-        'Runtime depends on numeric capacity `W`, not just number of items `N`.'
-    },
-    {
-      name: 'Transition Direction',
-      details:
-        'Capacity iteration direction encodes whether an item can be used once (descending) or multiple times (ascending).'
-    },
-    {
-      name: 'Variant Reduction',
-      details:
-        'Many knapsack variants are solved by transforming them into standard 0 or 1 or unbounded formulations.'
+      name: 'Pseudo-Polynomial Time',
+      details: 'The complexity $O(N \\times W)$ depends on the *value* of the capacity, not just the number of items. If $W$ is very large (e.g., $10^9$), this DP approach fails.'
     }
   ]
 };
