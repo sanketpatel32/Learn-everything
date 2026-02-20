@@ -134,13 +134,14 @@ export const airbnb: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Architecture Component', 'Choice', 'Reasoning'],
+    headers: ['Feature', 'Airbnb (Booking)', 'Uber (Dispatching)'],
     rows: [
-      ['Core Database', 'PostgreSQL (Relational SQL)', 'Requires ACID transactions for financial ledgers and strictly consistent availability tracking. NoSQL is too risky here.'],
-      ['Search Database', 'ElasticSearch / Lucene', 'Superlative free-text search (BM25), fast filtering (date ranges), and optimized Geospatial queries (GeoPoint/GeoShape).'],
-      ['Lock Mechanism', 'Redis (Temporary TTLS)', 'Provides speed to reject 99% of double-book attempts instantly before hitting the heavy slow SQL database with deadlocks.']
+      ['Booking Speed', 'Slow (Human in the loop)', 'Instant (Automated)'],
+      ['Latency', 'Medium (Sub-second not critical)', 'Low (Real-time updates)'],
+      ['Consistency', 'Strong (No double booking rooms)', 'Strong (Single driver match)'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=DytJ5q_HOXg',
   pitfalls: [
     'Serving map requests directly from SQL Database: Writing `SELECT * FROM properties WHERE lat BETWEEN x AND y AND price < $200` will table-scan your database and crush performance under user-zoom map drags. Always use a dedicated search cluster.',
     'Forgetting TTLs on Booking Locks: If a user begins the checkout process, locks the dates, and then closes their laptop, those dates remain unbookable forever. The Redis lock MUST have a strict 10-15 minute Time-to-Live expiration.',

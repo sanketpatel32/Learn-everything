@@ -124,6 +124,7 @@ export const tinyurl: TopicContent = {
       ['Snowflake IDs', 'Generate Twitter Snowflake ID -> Base62', 'Sortable, highly distributed, collision-resistant.', '64-bit ID usually results in an 11-character hash instead of 7.']
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=AVztRY77xxA',
   pitfalls: [
     'Relying purely on a relational database auto-increment: If you scale horizontally to 10 API servers, they cannot efficiently coordinate hitting the DB for the next ID at 10,000 Writes/sec. An ID generation strategy (like ticketing) is mandatory.',
     'Not utilizing an LRU Cache: Querying an indexed DB table for billions of URLs is fast, but handling 100,000 Reads/sec will still saturate DB connections and I/O. Memory caching is a non-negotiable requirement for this architecture.',

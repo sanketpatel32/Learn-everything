@@ -126,13 +126,14 @@ export const rateLimiter: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Algorithm', 'Memory Usage', 'Accuracy / Behavior during Spikes'],
+    headers: ['Algorithm', 'Memory Usage', 'Accuracy'],
     rows: [
-      ['Token Bucket', 'Extremely low (just tracking current tokens + last refill timestamp).', 'Allows brief bursts of traffic up to the bucket capacity, then smooths.'],
-      ['Fixed Window Counter', 'Lowest (Redis `INCR` per minute timestamp key).', 'Poor. Allows 2x traffic bursts precisely at the window reset boundary.'],
-      ['Sliding Window Log', 'Very high (Must store a timestamp array `[10:01.0, 10:01.3...]` per user).', 'Perfect. Mathematically impossible to exceed limits globally.']
+      ['Token Bucket', 'Very Low', 'High (Supports bursts)'],
+      ['Sliding Window', 'Medium', 'Excellent (Strict limits)'],
+      ['Fixed Window', 'Very Low', 'Poor (Burst edge cases)'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=FU4WlwfS3G0',
   pitfalls: [
     'Ignoring Network Latency: A round trip to Redis takes 2ms. If an API gateway handles 100,000 requests/sec, that 2ms latency stacks up and bottlenecks the gateway. Rate limiting must be insanely fast and ideally batched asynchronously if exact precision is not 100% vital.',
     'Rate Limiting by IP Address in shared networks: If you limit strictly by IPv4, you might accidentally block an entire University campus or Corporate NAT sharing one public IP. Limits should ideally apply using Auth Bearer Tokens (User ID) whenever possible.',

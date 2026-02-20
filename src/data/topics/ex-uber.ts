@@ -110,14 +110,14 @@ export const uber: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Problem', 'Naive Solution', 'Uber Scale Solution'],
+    headers: ['Feature', 'Uber (Dispatching)', 'Google Maps (Navigation)'],
     rows: [
-      ['Finding nearby drivers', 'Standard SQL Geography queries', 'In-memory QuadTree / H3 Hexagonal Grid (O(1) lookups)'],
-      ['Driver location ingestion', 'Directly UPDATE rows in PostgreSQL', 'Buffer via Kafka -> Update state in Redis'],
-      ['Notifying matched driver', 'App long-polls HTTP server every 5s', 'Persistent WebSockets or Server-Sent Events (SSE)'],
-      ['Routing & ETA calculation', 'Calculate straight-line distance', 'Query dedicated Map/Routing microservice holding pre-computed traffic graphs']
+      ['Update Frequency', 'High (Driver GPS every 4s)', 'Low (Road data updates)'],
+      ['Write Intensity', 'Extremely High (Location updates)', 'Low (Reads dominate)'],
+      ['Primary Algorithm', 'QuadTree / S2 Geometry', 'Dijkstra / A* Search'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=DGtalg5efCw',
   pitfalls: [
     'Using SQL for Real-Time Location: At 250k Writes/sec, row-level locking in SQL will cause massive deadlocks and latency. Volatile, temporal data belongs in specialized in-memory stores, while ride receipts and billing go to reliable durable storage (Postgres/Cassandra).',
     'Thundering Herd on Reconnection: If a cell tower blips and 5,000 drivers reconnect to the WebSocket gateway simultaneously, it can easily DDoS your own servers. Reconnection logic must implement Exponential Backoff and Jitter.',

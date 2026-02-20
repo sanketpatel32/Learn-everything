@@ -147,6 +147,7 @@ export const amazon: TopicContent = {
       ['Product Catalog', 'ElasticSearch / Redis', 'AP', 'Massive read volume (99% reads/finds). Latency is king. We can afford the catalog showing a stale price for 10 seconds.']
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=ep0VId88PZ8',
   pitfalls: [
     'Locking Inventory at Add-to-Cart: If you subtract inventory when users put an item in a cart, attackers can simply script 100 bots to add all your PS5s to their carts and never check out, locking out legitimate buyers. Inventory should only be locked during the active Checkout process.',
     'Distributed Transactions (2PC): Attempting to lock the User Database, Inventory Database, and Payment Provider simultaneously using a Two-Phase Commit is a latency nightmare. Microservices must use Sagas (event-driven compensations) over synchronous distributed locks.',

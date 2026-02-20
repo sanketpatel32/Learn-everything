@@ -111,14 +111,14 @@ export const ticketmaster: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Challenge', 'Risky Approach', 'Enterprise Architecture'],
+    headers: ['Feature', 'Ticketmaster (High Demand)', 'Expedia (Hotel Booking)'],
     rows: [
-      ['Massive Traffic Spike', 'Auto-scaling standard APIs directly against the DB', 'Virtual Waiting Room / Edge queuing (Token-based ingress)'],
-      ['Database Read Overload', 'Querying DB for available seats', 'Caching total inventory counts in Redis; syncing periodically'],
-      ['Concurrency (Double Booking)', 'Checking state with `if (seat.free)`', 'Pessimistic Row Locking (`FOR UPDATE`) + Redis Distributed Locks (Redlock)'],
-      ['Abandoned Payments', 'Blocking seat indefinitely', 'State Machine with strict TTL; Saga pattern to reverse reservations']
+      ['Traffic Profile', 'Burst (On-sale drops)', 'Steady/Predictable'],
+      ['Consistency', 'Strict (No double booking)', 'Eventual (Overbooking common)'],
+      ['Scalability', 'Massive Write Scaling (Locking)', 'High Read Scaling'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=fhdPyoO6aXI',
   pitfalls: [
     'Relying purely on Auto-scaling: AWS Auto-scaling takes minutes to spin up new EC2 instances. Event ticket traffic goes from zero to millions in exactly one second. Reactive auto-scaling will be too late. You must pre-scale infrastructure and use edge-queuing.',
     'Using NoSQL for Ticket Inventory: A NoSQL database with eventual consistency (like Cassandra) is a terrible choice here. You cannot handle "eventual" consistency when assigning a singular unique physical seat in a stadium. You need the strong ACID guarantees of a relational database.',

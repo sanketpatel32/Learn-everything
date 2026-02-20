@@ -143,13 +143,14 @@ export const twitter: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Approach', 'Load Characteristics', 'Best Fit User Category'],
+    headers: ['Feature', 'Fan-out on Write (Push)', 'Fan-out on Read (Pull)'],
     rows: [
-      ['Push (Fan-Out on Write)', 'Heavy Writes (O(N) followers). Instant Reads (O(1)).', 'Normal Users (followers < 100k). High read speed is guaranteed.'],
-      ['Pull (Fan-Out on Read)', 'O(1) Write. Heavy Reads (Must query DB/Cache for every feed load).', 'Celebrities (followers > 100k). Prevents system-wide write lag.'],
-      ['Hybrid Architecture', 'Balances Redis write queues with API server CPU merging costs.', 'Twitter\'s highly personalized, algorithmically sorted timeline.']
+      ['Efficiency', 'High for small users', 'High for celebrities'],
+      ['Latency', 'Fast delivery for followers', 'Slow (Computing on click)'],
+      ['Space', 'Duplicate data in feeds', 'Minimal storage overhead'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=o5n85GRKuzk',
   pitfalls: [
     'Applying Push to everyone: The "Justin Bieber Problem": Writing an entry into 50 Million independent Redis lists creates an enormous backlog. A user might not see a breaking news tweet until hours later because the fan-out queue is still processing.',
     'Sorting entirely in Database: Executing `SELECT * FROM tweets WHERE author_id IN (1, 2... 500) ORDER BY time DESC` is brutally slow at scale, even with indexes. Pre-computing in cache (Redis lists) is essential for sub-200ms feed loading.',

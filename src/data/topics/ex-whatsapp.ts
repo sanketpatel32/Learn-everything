@@ -123,15 +123,14 @@ export const whatsapp: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Component', 'Technology Choice', 'Why this choice?'],
+    headers: ['Feature', 'WhatsApp (Consumer)', 'Slack (Enterprise/Groups)'],
     rows: [
-      ['Connection Protocol', 'WebSockets (or XMPP)', 'Bi-directional, low-latency, avoids HTTP header overhead.'],
-      ['Session Store', 'Redis', 'In-memory, extremely fast read/writes for routing table.'],
-      ['Message Sync DB', 'Cassandra / ScyllaDB', 'Optimized for high-throughput append-only writes. Linear scalability.'],
-      ['Delivery Queue', 'RabbitMQ / Kafka', 'Decouples servers, buffers spikes, ensures messages aren\'t lost if SVR crashes.'],
-      ['Media Storage', 'S3 + CDN', 'Images/Videos are chunked, uploaded to S3, and standard HTTP URLs are sent in the chat.']
+      ['Primary Focus', 'E2E Encryption & Low Latency', 'Persistence & Channel History'],
+      ['Connection', 'Long-lived WebSockets', 'WebSockets + Polling fallback'],
+      ['Storage', 'Local-first, ephemeral on server', 'Centralized history & search'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=vvhC64hQZMk',
   pitfalls: [
     'Sticky Sessions / Rebalancing: If SVR_2 crashes, 100,000 users disconnect at once. They will all immediately reconnect, causing a "thundering herd" problem. The LB must employ jitter and rate-limiting to prevent cascading failures.',
     'Message Ordering: Guaranteeing chronological order across distributed nodes relies on generating time-sortable SnowFlake IDs at the source, rather than relying on global database auto-increments.',

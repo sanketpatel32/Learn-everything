@@ -122,6 +122,7 @@ export type TopicContent = {
     headers: string[]; // e.g. ['Feature', 'Vertical Scaling', 'Horizontal Scaling']
     rows: string[][]; // e.g. [['Cost', 'Hardware gets expensive', 'Cheap commodity hardware']]
   };
+  videoUrl?: string;
 };
 
 export const topicContent: Record<string, TopicContent> = {

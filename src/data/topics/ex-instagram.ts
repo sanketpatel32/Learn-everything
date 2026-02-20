@@ -132,13 +132,14 @@ export const instagram: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Pattern', 'Naive Architecture', 'Production Instagram'],
+    headers: ['Feature', 'Relational DB (Posts)', 'Object Storage (Media)'],
     rows: [
-      ['Database Tech', 'MongoDB JSON documents for all relation mappings.', 'Massively sharded PostgreSQL specifically built to hold Photo Metadata arrays in memory.'],
-      ['Serving Images', 'API Servers download from S3 and stream directly back to clients.', 'Client receives the raw CDN URL from API Server, fetching via CDN directly. API servers bypass image bytes completely.'],
-      ['Analytics & Metrics', 'SQL `COUNT(*)` to count photo likes.', 'A distributed Redis counter handles "likes" (O(1) memory update), later asynchronously reconciled to the Database.']
+      ['Data Type', 'Metadata & Relations', 'Binary Images/Videos'],
+      ['Scalability', 'Sharded Clusters', 'Global Edge CDN'],
+      ['Primary Need', 'Strict consistency', 'High throughput & global reach'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=QmX2NPkJTKg',
   pitfalls: [
     'Putting Images through API bounds: If an App Server intercepts and reads a 5MB image from S3, and then passes it out to the client, the Application Server will max out its Network Interface Card (NIC bandwidth) and crash. App Servers should only deal with JSON and JSON URLs.',
     'Hot DB Shards: If Leonardo DiCaprio posts an image, millions of likes flood to `PhotoID_88`. That single Database Shard must process 10,000 updates a second. Write queries must hit Redis or Memcached arrays first to aggregate counting.',

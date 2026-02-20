@@ -132,13 +132,14 @@ export const pastebin: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Approach', 'Collision Handling', 'Performance'],
+    headers: ['Feature', 'Pastebin (Large Text)', 'TinyURL (Short Strings)'],
     rows: [
-      ['On-the-Fly Hashing (MD5/SHA256)', 'High risk of collisions (requires DB check before insert).', 'Slows down writes; Database becomes a bottleneck.'],
-      ['Centralized Auto-Increment DB', 'Zero collisions natively.', 'Single point of failure. Predictable URLs (security risk).'],
-      ['Key Generation Service (KGS)', 'Pre-computed entirely avoiding runtime collisions.', 'Lightning fast writes, highly distributed, non-sequential URLs.']
+      ['Storage Depth', 'Massive (GBs per user)', 'Small (Bytes per user)'],
+      ['File Expiry', 'Required (TTL cleanup)', 'Desired (Cleanup optional)'],
+      ['Primary Need', 'Object Storage (S3)', 'Key-Value indexing'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=fMZMm_0ZhK4',
   pitfalls: [
     'Generating Keys at Write-Time: Checking if `Xy7A2w` exists in the DB before inserting requires a read lock, slowing writes down immensely. Always use a pre-generating KGS.',
     'Ignoring Cache Eviction: 20% of pastes (usually viral links or bot traffic) generate 80% of reads. Failing to place a Redis/Memcached layer in front of the Database means high-traffic pastes will cripple the Read servers.',

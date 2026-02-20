@@ -125,15 +125,14 @@ export const netflix: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Component', 'Technology', 'Purpose in Architecture'],
+    headers: ['Feature', 'Netflix (Global Streaming)', 'YouTube (UGC Content)'],
     rows: [
-      ['Control Plane', 'AWS / Spring Boot / gRPC', 'Handles user login, UI rendering, recommendation algorithms, and billing.'],
-      ['Data Plane', 'Netflix Open Connect (OCA)', 'Custom CDN racks embedded inside local ISP networks to serve massive video files.'],
-      ['Storage', 'Amazon S3', 'Stores the original raw Hollywood master files.'],
-      ['Client Player', 'DASH / HLS', 'Downloads manifest files and requests individual video chunks based on active network speed.'],
-      ['Database', 'Cassandra', 'Stores global watch history and user profiles (highly available, multi-region).']
+      ['Content Type', 'High-quality Studio Produced', 'User Generated Content'],
+      ['Storage Depth', 'Predictable (Catalog size)', 'Massive (Hours uploaded/min)'],
+      ['Delivery', 'Massive Edge CDN (Open Connect)', 'Global Google CDN (GGC)'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=VvZf7lISfgs',
   pitfalls: [
     'Serving Video through the API Gateway: A classic beginner mistake. Text data (JSON) and Video data must travel completely different paths. Routing a 4K video stream through your user-auth microservice will instantly bottleneck and crash your entire system.',
     'Transcoding on the Fly: Video encoding is extremely CPU intensive. You cannot transcode a movie at the exact moment a user hits "Play". All formatting and chunking must happen asynchronously when the movie is first added to the library.',

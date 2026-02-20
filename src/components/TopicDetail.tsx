@@ -3,8 +3,9 @@
 import { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Brain, AlertCircle, Lock, ArrowUp, Zap, GitCompare } from 'lucide-react';
+import { X, Brain, AlertCircle, Lock, ArrowUp, Zap, GitCompare, Link2 } from 'lucide-react';
 import { topicContent } from '@/data/topicContent';
+import { topicVideoLinks } from '@/data/topicVideoLinks';
 import { cn } from '@/lib/utils';
 
 function ScrollToTop({ containerRef }: { readonly containerRef: React.RefObject<HTMLDivElement> }) {
@@ -152,6 +153,8 @@ export function TopicDetail({ topicId, onClose }: TopicDetailProps) {
   const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const content = topicId ? topicContent[topicId] : null;
+  const fallbackVideoUrl = topicId ? topicVideoLinks[topicId] : undefined;
+  const videoUrl = content?.videoUrl ?? fallbackVideoUrl;
 
   useEffect(() => {
     setMounted(true);
@@ -221,14 +224,30 @@ export function TopicDetail({ topicId, onClose }: TopicDetailProps) {
             <div className="px-6 sm:px-12 py-8 relative">
               {content ? (
                 <div className="space-y-12 pb-24">
-                  <div className="space-y-4">
-                    <h2 className="text-4xl font-extrabold bg-gradient-to-r from-white via-indigo-200 to-slate-400 bg-clip-text text-transparent tracking-tight">
-                      {content.title}
-                    </h2>
-                    <p className="text-slate-300 leading-relaxed text-lg font-medium opacity-90">
-                      {content.description}
-                    </p>
-                  </div>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <h2 className="text-4xl font-extrabold bg-gradient-to-r from-white via-indigo-200 to-slate-400 bg-clip-text text-transparent tracking-tight">
+                          {content.title}
+                        </h2>
+                        {videoUrl && (
+                          <motion.a
+                            href={videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            whileHover={{ scale: 1.08 }}
+                            whileTap={{ scale: 0.95 }}
+                            aria-label={`Open tutorial video for ${content.title}`}
+                            title="Open tutorial video"
+                            className="mt-1 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 hover:text-rose-200 hover:bg-rose-500/15 transition-colors shadow-[0_0_18px_rgba(244,63,94,0.15)] shrink-0"
+                          >
+                            <Link2 className="w-4 h-4" />
+                          </motion.a>
+                        )}
+                      </div>
+                      <p className="text-slate-300 leading-relaxed text-lg font-medium opacity-90">
+                        {content.description}
+                      </p>
+                    </div>
 
                   {/* Example */}
                   {content.example && (

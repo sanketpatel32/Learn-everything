@@ -150,13 +150,14 @@ export const youtube: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Video Standard', 'Single File Stream (MP4)', 'Segmented Streaming (HLS/DASH)'],
+    headers: ['Component', 'Technology Choice', 'Purpose'],
     rows: [
-      ['Network Quality Drop', 'Entire video buffers and freezes.', 'Client dynamically requests lower quality for the next 5 seconds.'],
-      ['Memory Usage', 'Requires loading massive byte ranges into memory.', 'Requires only the tiny 5 second chunk currently playing.'],
-      ['CDN Caching', 'Hard to securely cache an interrupted large file proxy.', 'Incredible CDN hit rates since small segments are universally requested.']
+      ['Transcoding', 'K8s Workers / FFmpeg', 'Compute-intensive encoding'],
+      ['Metadata', 'Sharded MySQL / Vitess', 'Reliable video search/likes'],
+      ['CDN', 'Global Google CDN', 'Low-latency global delivery'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=jPKTo1iGQiE',
   pitfalls: [
     'Serving static MP4 files directly: This ensures all mobile users on poor networks will buffer forever, or users on 4K networks get blurry artifacts. Streaming MUST be adaptive and segmented.',
     'Encoding video synchronously: Forcing an upload API server to run `FFmpeg` blocks the CPU for hours. Encoding must be entirely asynchronous, message queue-driven, and highly horizontal.',

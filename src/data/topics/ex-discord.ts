@@ -143,14 +143,14 @@ export const discord: TopicContent = {
     }
   ],
   comparisonTable: {
-    headers: ['Challenge', 'Naive Approach', 'Discord Solution'],
+    headers: ['Feature', 'Discord (Massive Groups)', 'WhatsApp (DM Focused)'],
     rows: [
-      ['Connection State', 'App servers hold WS connections', 'Dedicated Edge Gateway tier holds plain WS, separate from business logic APIs.'],
-      ['Large Server Fanout', 'Send message to 500k offline users via push notifications', 'Send ONLY to active Gateways. Offline users get aggregated push notifications.'],
-      ['Storage', 'MongoDB/MySQL (B-Tree indexes)', 'Cassandra/ScyllaDB (LSM Tree, amazing for append-only high write volume).'],
-      ['Snowflakes IDs', 'Auto-incrementing Database IDs', 'Twitter Snowflake distributed ID generation (chronological, no DB bottleneck).']
+      ['Connection Scale', 'Millions per gateway', 'Thousands per gateway'],
+      ['Message Fan-out', 'Huge (Server members)', 'Small (Groups/Individuals)'],
+      ['Privacy Model', 'Semi-public servers', 'End-to-End Encrypted'],
     ]
   },
+  videoUrl: 'https://www.youtube.com/watch?v=okrR1KXNLtA',
   pitfalls: [
     'Connection Draining: If you deploy an update to a Gateway server, you will disconnect 500,000 concurrent users at once. They will all instantly try to reconnect, creating a Thundering Herd that brings down your Auth service. Deployments must use slow connection draining limits.',
     'Presence "Flapping": Users dropping internet for 2 seconds shouldn\'t instantly trigger system-wide "User is Offline" -> "User is Online" broadcasts. Implement a delay (e.g., 60 seconds) before officially marking a dropped connection as offline.',
