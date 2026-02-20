@@ -3,7 +3,7 @@ import type { TopicContent } from '../topicContent';
 export const topKElements: TopicContent = {
   title: 'Top K Elements',
   description:
-    'Top-K problems ask for the largest or smallest `k` items without fully sorting all values. The key idea is to maintain only useful candidates instead of ordering the entire input.',
+    'Top-K problems select best `k` elements or kth rank without fully sorting everything. The main design choice is whether to optimize for one-shot query, streaming updates, or multiple repeated queries.',
   example:
     'Given `[3,2,1,5,6,4]` and `k = 2`, the 2nd largest element is `5`. For top-2 largest elements, a valid output set is `[6,5]`.',
   complexity: {
@@ -14,7 +14,7 @@ export const topKElements: TopicContent = {
     {
       title: 'Brute Force (Full Sort)',
       content:
-        'Sort the entire array and read answer by index.\n\nStep-by-step mechanics:\n1. Sort input ascending.\n2. For kth largest, return index `n - k`.\n3. For top-k list, return suffix `arr[n-k:]`.\n\n```python\nfunction kthLargestSort(nums, k):\n    nums.sort()\n    return nums[len(nums) - k]\n\nfunction topKLargestSort(nums, k):\n    nums.sort()\n    return nums[len(nums) - k : ]\n```\n\nThis is simple and often acceptable in interviews for small constraints, but it does unnecessary ordering work when only a tiny top subset is required.',
+        'Sort all values and read target rank or suffix.\n\nStep-by-step mechanics:\n1. Sort ascending.\n2. kth largest index is `n-k`.\n3. Top-k largest is last `k` elements.\n\n```python\nfunction kthLargestSort(nums, k):\n    nums.sort()\n    return nums[len(nums) - k]\n\nfunction topKLargestSort(nums, k):\n    nums.sort()\n    return nums[len(nums) - k : ]\n```\n\nThis is robust but pays full `O(N log N)` even when only one rank is needed.',
       complexity: {
         time: 'O(N log N)',
         space: 'O(1) to O(N) depending on sort'
@@ -23,7 +23,7 @@ export const topKElements: TopicContent = {
     {
       title: 'Optimal Approach (Min Heap of Size K)',
       content:
-        'Maintain only the current best `k` elements in a min-heap.\n\nStep-by-step mechanics:\n1. Iterate through values one by one.\n2. Push value into min-heap.\n3. If heap size exceeds `k`, pop one element (the smallest among current candidates).\n4. At the end:\n   - heap root is kth largest.\n   - heap contents are the top-k elements (unsorted).\n\n```python\nimport heapq\n\nfunction kthLargestHeap(nums, k):\n    minHeap = []\n\n    for x in nums:\n        heapq.heappush(minHeap, x)\n        if len(minHeap) > k:\n            heapq.heappop(minHeap)\n\n    return minHeap[0]\n\nfunction topKHeap(nums, k):\n    minHeap = []\n\n    for x in nums:\n        heapq.heappush(minHeap, x)\n        if len(minHeap) > k:\n            heapq.heappop(minHeap)\n\n    return list(minHeap)\n```\n\nInvariant to remember:\n- Heap size is never more than `k`.\n- Every element outside heap is less than or equal to at least one heap element after processing.\n\nWhy this works:\nWhenever heap grows beyond `k`, removing the smallest preserves only the `k` largest seen so far. After full scan, that candidate set must be globally top-k.',
+        'Maintain a bounded min-heap containing current top `k` candidates.\n\nStep-by-step mechanics:\n1. Stream each value into min-heap.\n2. If size exceeds `k`, pop minimum.\n3. Heap root is kth largest after full stream.\n4. Heap contents are top-k set (unsorted).\n\n```python\nimport heapq\n\nfunction kthLargestHeap(nums, k):\n    minHeap = []\n\n    for x in nums:\n        heapq.heappush(minHeap, x)\n        if len(minHeap) > k:\n            heapq.heappop(minHeap)\n\n    return minHeap[0]\n\nfunction topKHeap(nums, k):\n    minHeap = []\n\n    for x in nums:\n        heapq.heappush(minHeap, x)\n        if len(minHeap) > k:\n            heapq.heappop(minHeap)\n\n    return list(minHeap)\n```\n\nAdvanced choice guidance:\n- one-shot kth query: quickselect often faster average\n- streaming top-k: heap is the natural data structure\n- many repeated queries with static data: pre-sort once\n\nWhy this works:\nEach pop removes the smallest among candidates, preserving exactly the `k` largest seen prefix-invariant at every step.',
       complexity: {
         time: 'O(N log K)',
         space: 'O(K)'
@@ -51,6 +51,11 @@ export const topKElements: TopicContent = {
       name: 'Candidate-set Invariant',
       details:
         'A bounded heap lets you preserve only necessary candidates while discarding provably irrelevant values immediately.'
+    },
+    {
+      name: 'Streaming-friendly Selection',
+      details:
+        'Heap-based top-k does not require storing sorted order for all elements, which makes it ideal for online/large-stream workloads.'
     }
   ]
 };

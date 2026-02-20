@@ -26,7 +26,11 @@ import { fenwickTreeBit } from './topics/fenwick-tree-bit';
 import { disjointSetUnion } from './topics/disjoint-set-union';
 import { topKElements } from './topics/top-k-elements';
 import { medianInStream } from './topics/median-in-stream';
+import { classicBinarySearch } from './topics/classic-binary-search';
 import { binarySearchOnAnswer } from './topics/binary-search-on-answer';
+import { intervalsPatterns } from './topics/intervals-patterns';
+import { greedyProofPatterns } from './topics/greedy-patterns';
+import { backtrackingTemplate } from './topics/backtracking-template';
 import { customComparators } from './topics/custom-comparators';
 import { quickselectAlgorithm } from './topics/quickselect-algorithm';
 import { knapsackVariants } from './topics/knapsack-variants';
@@ -61,6 +65,26 @@ import { sagas } from './topics/sagas';
 import { telemetry } from './topics/telemetry';
 import { authSecurity } from './topics/auth-security';
 import { zeroTrust } from './topics/zero-trust';
+import { whatsapp } from './topics/ex-whatsapp';
+import { netflix } from './topics/ex-netflix';
+import { uber } from './topics/ex-uber';
+import { ticketmaster } from './topics/ex-ticketmaster';
+import { tinyurl } from './topics/ex-tinyurl';
+import { discord } from './topics/ex-discord';
+import { twitter } from './topics/ex-twitter';
+import { instagram } from './topics/ex-instagram';
+import { youtube } from './topics/ex-youtube';
+import { amazon } from './topics/ex-amazon';
+import { airbnb } from './topics/ex-airbnb';
+import { pastebin } from './topics/ex-pastebin';
+import { rateLimiter } from './topics/ex-rate-limiter';
+import { googleDrive } from './topics/ex-google-drive';
+import { typeahead } from './topics/ex-typeahead';
+
+// ... other imports ...
+import { consistentHashing } from './topics/consistent-hashing';
+import { distributedLocks } from './topics/distributed-locks';
+import { vectorDb } from './topics/vector-db';
 
 export type TopicContent = {
   title: string;
@@ -127,7 +151,11 @@ export const topicContent: Record<string, TopicContent> = {
   'dsa_dsu': disjointSetUnion,
   'dsa_heap_k': topKElements,
   'dsa_heap_median': medianInStream,
+  'dsa_binsearch_classic': classicBinarySearch,
   'dsa_binsearch_ans': binarySearchOnAnswer,
+  'dsa_intervals': intervalsPatterns,
+  'dsa_greedy_patterns': greedyProofPatterns,
+  'dsa_backtracking': backtrackingTemplate,
   'dsa_sorting_custom': customComparators,
   'dsa_quickselect': quickselectAlgorithm,
   'dsa_dp_knap': knapsackVariants,
@@ -163,5 +191,23 @@ export const topicContent: Record<string, TopicContent> = {
   'sd_sagas': sagas,
   'sd_telemetry': telemetry,
   'sd_auth_security': authSecurity,
-  'sd_zero_trust': zeroTrust
+  'sd_zero_trust': zeroTrust,
+  'sd_consistent_hashing': consistentHashing,
+  'sd_distributed_locks': distributedLocks,
+  'sd_vector_db': vectorDb,
+  'ex_whatsapp': whatsapp,
+  'ex_netflix': netflix,
+  'ex_uber': uber,
+  'ex_ticketmaster': ticketmaster,
+  'ex_tinyurl': tinyurl,
+  'ex_discord': discord,
+  'ex_twitter': twitter,
+  'ex_instagram': instagram,
+  'ex_youtube': youtube,
+  'ex_amazon': amazon,
+  'ex_airbnb': airbnb,
+  'ex_pastebin': pastebin,
+  'ex_rate_limiter': rateLimiter,
+  'ex_google_drive': googleDrive,
+  'ex_typeahead': typeahead,
 };

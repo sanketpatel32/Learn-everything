@@ -5,7 +5,7 @@ import RoadmapGraph from '@/components/RoadmapGraph';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'dsa' | 'system-design'>('dsa');
+  const [activeTab, setActiveTab] = useState<'dsa' | 'system-design' | 'examples'>('dsa');
 
   return (
     <main className="flex min-h-screen flex-col items-center bg-background text-foreground relative selection:bg-primary/30 w-full overflow-x-hidden">
@@ -67,6 +67,24 @@ export default function Home() {
             )}
             <span className="relative z-10 flex items-center justify-center gap-2">
               System Design
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('examples')}
+            className={`relative flex-1 sm:flex-none px-4 sm:px-8 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 whitespace-nowrap min-w-[140px] ${
+              activeTab === 'examples' ? 'text-white' : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            {activeTab === 'examples' && (
+              <motion.div
+                layoutId="activeTabBadge"
+                className="absolute inset-0 bg-primary shadow-[0_0_25px_rgba(99,102,241,0.5)] rounded-xl"
+                initial={false}
+                transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+              />
+            )}
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              Real-World Examples
             </span>
           </button>
         </div>

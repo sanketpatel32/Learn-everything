@@ -1,17 +1,21 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { dsaRoadmap, systemDesignRoadmap } from '@/data/roadmap';
+import { dsaRoadmap, systemDesignRoadmap, examplesRoadmap } from '@/data/roadmap';
 import { SimpleRoadmap } from './SimpleRoadmap';
 import { TopicDetail } from './TopicDetail';
 
 interface RoadmapGraphProps {
-  readonly type: 'dsa' | 'system-design';
+  readonly type: 'dsa' | 'system-design' | 'examples';
 }
 
 export default function RoadmapGraph({ type }: RoadmapGraphProps) {
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
-  const rootData = useMemo(() => (type === 'dsa' ? dsaRoadmap : systemDesignRoadmap), [type]);
+  const rootData = useMemo(() => {
+    if (type === 'examples') return examplesRoadmap;
+    if (type === 'system-design') return systemDesignRoadmap;
+    return dsaRoadmap;
+  }, [type]);
 
   return (
     <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 md:px-6 py-8 overflow-hidden">

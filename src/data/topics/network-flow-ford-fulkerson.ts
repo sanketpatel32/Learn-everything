@@ -3,7 +3,7 @@ import type { TopicContent } from '../topicContent';
 export const networkFlowFordFulkerson: TopicContent = {
   title: 'Network Flow (Ford-Fulkerson)',
   description:
-    'Network Flow finds maximum transferable flow from source to sink under edge capacity constraints. Ford-Fulkerson builds flow incrementally through augmenting paths in the residual graph.',
+    'Network Flow computes the maximum feasible transfer from source to sink under edge capacities. Ford-Fulkerson augments flow along residual paths until no improvement is possible.',
   example:
     'Given directed capacities from source `s` to sink `t`, compute maximum flow value (for example, in bipartite matching or bandwidth routing).',
   complexity: {
@@ -14,7 +14,7 @@ export const networkFlowFordFulkerson: TopicContent = {
     {
       title: 'Brute Force (Try All Flow Assignments)',
       content:
-        'A naive strategy enumerates possible flow assignments and checks feasibility constraints.\n\nStep-by-step mechanics:\n1. Assign tentative flow on each edge.\n2. Validate capacity constraints (`0 <= f(u,v) <= c(u,v)`).\n3. Validate flow conservation on non-terminal vertices.\n4. Keep maximum feasible source outflow.\n\n```python\nfunction bruteMaxFlow(graph, s, t):\n    best = 0\n\n    for assignment in allPossibleAssignments(graph):\n        if isCapacityValid(assignment, graph) and isConservationValid(assignment, s, t):\n            best = max(best, outFlow(assignment, s))\n\n    return best\n```\n\nThis is conceptually correct but combinatorially intractable.',
+        'A brute-force formulation tries many possible edge-flow assignments and validates constraints.\n\nStep-by-step mechanics:\n1. Guess flow on each directed edge.\n2. Check capacity bounds for every edge.\n3. Check conservation at non-source/non-sink vertices.\n4. Track largest valid source outflow.\n\n```python\nfunction bruteMaxFlow(graph, s, t):\n    best = 0\n\n    for assignment in allPossibleAssignments(graph):\n        if isCapacityValid(assignment, graph) and isConservationValid(assignment, s, t):\n            best = max(best, outFlow(assignment, s))\n\n    return best\n```\n\nThis explains constraints but is computationally infeasible for meaningful graph sizes.',
       complexity: {
         time: 'Exponential',
         space: 'Large enumeration state'
@@ -23,7 +23,7 @@ export const networkFlowFordFulkerson: TopicContent = {
     {
       title: 'Optimal Approach (Ford-Fulkerson / Edmonds-Karp)',
       content:
-        'Maintain residual capacities and repeatedly augment along `s -> t` paths until none exists.\n\nStep-by-step mechanics:\n1. Initialize all flows to `0`.\n2. Build residual graph where each edge has remaining capacity.\n3. Find augmenting path from `s` to `t`.\n4. Compute bottleneck capacity (minimum residual edge on path).\n5. Add bottleneck to forward edges and subtract on reverse edges.\n6. Repeat until no augmenting path remains.\n\n```python\nfunction edmondsKarp(capacity, s, t):\n    n = len(capacity)\n    flow = [[0] * n for _ in range(n)]\n    maxFlow = 0\n\n    while True:\n        parent = [-1] * n\n        parent[s] = s\n        queue = [s]\n\n        while queue and parent[t] == -1:\n            u = queue.pop(0)\n            for v in range(0, n):\n                residual = capacity[u][v] - flow[u][v]\n                if parent[v] == -1 and residual > 0:\n                    parent[v] = u\n                    queue.append(v)\n\n        if parent[t] == -1:\n            break\n\n        bottleneck = INF\n        v = t\n        while v != s:\n            u = parent[v]\n            bottleneck = min(bottleneck, capacity[u][v] - flow[u][v])\n            v = u\n\n        v = t\n        while v != s:\n            u = parent[v]\n            flow[u][v] += bottleneck\n            flow[v][u] -= bottleneck\n            v = u\n\n        maxFlow += bottleneck\n\n    return maxFlow\n```\n\nWhy this works:\nEach augmentation improves total flow while preserving constraints. When no augmenting path exists in residual graph, current flow is maximum (Max-Flow Min-Cut theorem).',
+        'Use residual graph and repeatedly push additional flow through augmenting paths.\n\nStep-by-step mechanics:\n1. Start with zero flow everywhere.\n2. Residual capacity on edge `(u,v)` is `cap[u][v] - flow[u][v]`.\n3. Find any residual path from `s` to `t`.\n4. Bottleneck is minimum residual capacity on that path.\n5. Augment path by bottleneck:\n   - add on forward edges\n   - subtract on reverse edges\n6. Repeat until sink becomes unreachable in residual graph.\n\n```python\nfunction edmondsKarp(capacity, s, t):\n    n = len(capacity)\n    flow = [[0] * n for _ in range(n)]\n    maxFlow = 0\n\n    while True:\n        parent = [-1] * n\n        parent[s] = s\n        queue = [s]\n\n        while queue and parent[t] == -1:\n            u = queue.pop(0)\n            for v in range(0, n):\n                residual = capacity[u][v] - flow[u][v]\n                if parent[v] == -1 and residual > 0:\n                    parent[v] = u\n                    queue.append(v)\n\n        if parent[t] == -1:\n            break\n\n        bottleneck = INF\n        v = t\n        while v != s:\n            u = parent[v]\n            bottleneck = min(bottleneck, capacity[u][v] - flow[u][v])\n            v = u\n\n        v = t\n        while v != s:\n            u = parent[v]\n            flow[u][v] += bottleneck\n            flow[v][u] -= bottleneck\n            v = u\n\n        maxFlow += bottleneck\n\n    return maxFlow\n```\n\nWhy Edmonds-Karp specifically:\n- It chooses shortest augmenting path in number of edges (BFS).\n- This gives polynomial bound `O(V*E^2)` unlike generic DFS-based Ford-Fulkerson bound depending on max-flow value.\n\nWhy this works:\nResidual updates preserve feasibility and allow rerouting past decisions. When no augmenting path exists, residual cut certifies optimality by Max-Flow Min-Cut theorem.',
       complexity: {
         time: 'O(V*E^2) with BFS path selection (Edmonds-Karp)',
         space: 'O(V^2) matrix form or O(V+E) adjacency form'
@@ -33,7 +33,8 @@ export const networkFlowFordFulkerson: TopicContent = {
   pitfalls: [
     'Forgetting reverse residual edges prevents flow cancellation and gives wrong answers.',
     'Using DFS path selection can be correct but may be very slow on some inputs.',
-    'Mixing up original capacity graph and residual graph updates causes subtle bugs.'
+    'Mixing up original capacity graph and residual graph updates causes subtle bugs.',
+    'Integer overflow can occur for large capacities if flow type is too small.'
   ],
   concepts: [
     {
@@ -45,6 +46,11 @@ export const networkFlowFordFulkerson: TopicContent = {
       name: 'Max-Flow Min-Cut',
       details:
         'Algorithm terminates at optimum when no augmenting path exists; flow value equals capacity of a minimum `s-t` cut.'
+    },
+    {
+      name: 'Augmenting Path Paradigm',
+      details:
+        'Maximum flow is reached by repeatedly finding feasible improvement directions in residual space until local optimum equals global optimum.'
     }
   ]
 };
