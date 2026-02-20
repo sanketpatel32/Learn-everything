@@ -33,10 +33,12 @@ import { knapsackVariants } from './topics/knapsack-variants';
 import { lcsLisPatterns } from './topics/lcs-lis-patterns';
 import { bitmaskDp } from './topics/bitmask-dp';
 import { dpOnTrees } from './topics/dp-on-trees';
+import { digitDp } from './topics/digit-dp';
 import { graphBfsDfs } from './topics/graph-bfs-dfs';
 import { topologicalSortKahn } from './topics/topological-sort-kahn';
 import { shortestPaths } from './topics/shortest-paths';
 import { stronglyConnectedComponents } from './topics/strongly-connected-components';
+import { networkFlowFordFulkerson } from './topics/network-flow-ford-fulkerson';
 import { scalingTypes } from './topics/scaling-types';
 import { loadBalancing } from './topics/load-balancing';
 import { sharding } from './topics/sharding';
@@ -50,6 +52,15 @@ import { cqrsEventSourcing } from './topics/cqrs';
 import { rateLimiting } from './topics/rate-limiting';
 import { bulkhead } from './topics/bulkhead';
 import { indexTypes } from './topics/index-types';
+import { replication } from './topics/replication';
+import { kafka } from './topics/kafka';
+import { protocols } from './topics/protocols';
+import { serviceMesh } from './topics/service-mesh';
+import { outboxPattern } from './topics/outbox-pattern';
+import { sagas } from './topics/sagas';
+import { telemetry } from './topics/telemetry';
+import { authSecurity } from './topics/auth-security';
+import { zeroTrust } from './topics/zero-trust';
 
 export type TopicContent = {
   title: string;
@@ -123,10 +134,12 @@ export const topicContent: Record<string, TopicContent> = {
   'dsa_dp_lcs': lcsLisPatterns,
   'dsa_dp_bitmask': bitmaskDp,
   'dsa_dp_tree': dpOnTrees,
+  'dsa_dp_digit': digitDp,
   'dsa_graph_trav': graphBfsDfs,
   'dsa_topo': topologicalSortKahn,
   'dsa_graph_short': shortestPaths,
   'dsa_graph_scc': stronglyConnectedComponents,
+  'dsa_graph_flow': networkFlowFordFulkerson,
   'sd_consistency_models': capTheorem,
   'sd_queues': messagingQueues,
   'sd_scale_vert': scalingTypes,
@@ -141,5 +154,14 @@ export const topicContent: Record<string, TopicContent> = {
   'sd_cqrs': cqrsEventSourcing,
   'sd_throttling': rateLimiting,
   'sd_bulkhead': bulkhead,
-  'sd_index_types': indexTypes
+  'sd_index_types': indexTypes,
+  'sd_replication': replication,
+  'sd_kafka': kafka,
+  'sd_protocols': protocols,
+  'sd_service_mesh': serviceMesh,
+  'sd_outbox': outboxPattern,
+  'sd_sagas': sagas,
+  'sd_telemetry': telemetry,
+  'sd_auth_security': authSecurity,
+  'sd_zero_trust': zeroTrust
 };

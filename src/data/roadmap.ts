@@ -104,6 +104,16 @@ export const dsaRoadmap: RoadmapItem = {
           ],
         },
         {
+          id: 'dsa_patterns',
+          label: 'Patterns & Paradigms',
+          children: [
+            { id: 'dsa_binsearch_classic', label: 'Classic Binary Search' },
+            { id: 'dsa_intervals', label: 'Intervals (Merge/Insert/Meeting Rooms)' },
+            { id: 'dsa_greedy_patterns', label: 'Greedy Proof Patterns' },
+            { id: 'dsa_backtracking', label: 'Backtracking Template' },
+          ],
+        },
+        {
           id: 'dsa_dp',
           label: 'Dynamic Programming',
           children: [
@@ -111,7 +121,7 @@ export const dsaRoadmap: RoadmapItem = {
             { id: 'dsa_dp_lcs', label: 'LCS / LIS Patterns' },
             { id: 'dsa_dp_bitmask', label: 'Bitmask DP' },
             { id: 'dsa_dp_tree', label: 'DP on Trees' },
-            { id: 'dsa_dp_digit', label: 'Digit DP', isComingSoon: true },
+            { id: 'dsa_dp_digit', label: 'Digit DP' },
           ],
         },
         {
@@ -122,7 +132,7 @@ export const dsaRoadmap: RoadmapItem = {
             { id: 'dsa_topo', label: 'Topological Sort / Kahn\'s' },
             { id: 'dsa_graph_short', label: 'Shortest Paths (Dijkstra, Bellman-Ford)' },
             { id: 'dsa_graph_scc', label: 'Strongly Connected (Tarjan/Kosaraju)' },
-            { id: 'dsa_graph_flow', label: 'Network Flow (Ford-Fulkerson)', isComingSoon: true },
+            { id: 'dsa_graph_flow', label: 'Network Flow (Ford-Fulkerson)' },
           ],
         },
       ],
