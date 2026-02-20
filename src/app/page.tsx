@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import RoadmapGraph from '@/components/RoadmapGraph';
-import { Logo } from '@/components/Logo';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
@@ -26,34 +25,59 @@ export default function Home() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="flex flex-col items-center gap-4"
         >
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-500/10 rounded-3xl p-3 sm:p-4 border border-indigo-500/20 backdrop-blur-2xl relative flex items-center justify-center">
-            <div className="absolute inset-0 bg-indigo-500/30 blur-2xl rounded-full opacity-40 animate-pulse" />
+          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-indigo-500/5 rounded-[2rem] p-1 border border-white/5 backdrop-blur-3xl relative flex items-center justify-center overflow-hidden group shadow-2xl">
+            {/* Rotating Aura Background */}
+            <div className="absolute inset-x-0 inset-y-0 bg-[conic-gradient(from_0deg,transparent,rgba(99,102,241,0.2),transparent)] animate-[spin_4s_linear_infinite]" />
+            <div className="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full opacity-60 animate-pulse" />
+            
             <svg
               viewBox="0 0 100 100"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="w-full h-full relative z-10 drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]"
+              className="w-full h-full relative z-10 drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]"
             >
               <defs>
-                <linearGradient id="logo-grad-fixed" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id="core-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#6366f1" />
                   <stop offset="100%" stopColor="#a855f7" />
                 </linearGradient>
+                <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2.5" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
               </defs>
-              <path
-                d="M20 50 L40 30 L60 70 L80 50"
-                stroke="url(#logo-grad-fixed)"
-                strokeWidth="10"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="20" cy="50" r="7" fill="#6366f1" />
-              <circle cx="40" cy="30" r="7" fill="#6366f1" />
-              <circle cx="60" cy="70" r="7" fill="#a855f7" />
-              <circle cx="80" cy="50" r="7" fill="#a855f7" />
-              <circle cx="50" cy="20" r="5" fill="#6366f1">
-                <animate attributeName="cy" values="20;30;20" dur="3s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" />
+
+              {/* Orbital Paths */}
+              <circle cx="50" cy="50" r="30" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" strokeDasharray="2 4" />
+              <circle cx="50" cy="50" r="15" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
+
+              {/* Central Knowledge Core */}
+              <circle cx="50" cy="50" r="8" fill="url(#core-grad)" filter="url(#neon-glow)">
+                <animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite" />
+              </circle>
+
+              {/* Orbital Nodes & Neural Paths */}
+              <g className="animate-[spin_8s_linear_infinite] origin-center">
+                <circle cx="20" cy="50" r="4" fill="#6366f1" filter="url(#neon-glow)" />
+                <path d="M50 50 L20 50" stroke="#6366f1" strokeWidth="0.5" opacity="0.3" />
+              </g>
+
+              <g className="animate-[spin_12s_linear_infinite_reverse] origin-center">
+                <circle cx="80" cy="50" r="3" fill="#a855f7" filter="url(#neon-glow)" />
+                <path d="M50 50 L80 50" stroke="#a855f7" strokeWidth="0.5" opacity="0.3" />
+              </g>
+
+              <g className="animate-[spin_15s_linear_infinite] origin-center">
+                <circle cx="50" cy="20" r="2.5" fill="#f43f5e" filter="url(#neon-glow)" />
+                <path d="M50 50 L50 20" stroke="#f43f5e" strokeWidth="0.5" opacity="0.3" />
+              </g>
+
+              {/* Floating Dynamic Particles */}
+              <circle cx="35" cy="35" r="1" fill="white" opacity="0.5">
+                <animate attributeName="opacity" values="0.2;1;0.2" dur="1.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="65" cy="65" r="1" fill="white" opacity="0.5">
+                <animate attributeName="opacity" values="0.2;1;0.2" dur="2.1s" repeatCount="indefinite" />
               </circle>
             </svg>
           </div>
