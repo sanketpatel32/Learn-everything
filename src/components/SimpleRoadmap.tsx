@@ -4,16 +4,30 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { RoadmapItem } from '@/data/roadmap';
 
 interface SimpleRoadmapProps {
-  readonly data: RoadmapItem;
-  readonly depth?: number;
+  data: any;
+  depth?: number;
+  onSelect?: (id: string) => void;
 }
 
-export function SimpleRoadmap({ data, depth = 0 }: SimpleRoadmapProps) {
+export function SimpleRoadmap({ data, depth = 0, onSelect }: SimpleRoadmapProps) {
   const [isExpanded, setIsExpanded] = useState(depth < 1); // Expand first level by default
   const hasChildren = data.children && data.children.length > 0;
+
+  const handleNodeClick = (e: React.MouseEvent) => {
+    if (data.isComingSoon) return;
+    
+    // Toggle expansion if it has children
+    if (hasChildren) {
+      setIsExpanded(!isExpanded);
+    }
+    
+    // Trigger selection ONLY if it's a leaf node
+    if (!hasChildren) {
+      onSelect?.(data.id);
+    }
+  };
 
   return (
     <div className={cn("flex flex-col min-w-0", depth > 0 && "ml-1.5 sm:ml-4 md:ml-8 border-l border-slate-800/50 pl-2 sm:pl-4 md:pl-8 py-2")}>
@@ -24,10 +38,10 @@ export function SimpleRoadmap({ data, depth = 0 }: SimpleRoadmapProps) {
         className={cn(
           "group relative flex items-start gap-2.5 sm:gap-4 p-2.5 sm:p-4 rounded-xl transition-all-smooth border border-white/5",
           "bg-slate-900/40 backdrop-blur-xl hover:bg-slate-800/60",
-          data.isComingSoon && "opacity-50 grayscale",
-          hasChildren && "cursor-pointer"
+          !data.isComingSoon && "cursor-pointer hover:border-primary/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]",
+          data.isComingSoon && "opacity-50 grayscale"
         )}
-        onClick={() => hasChildren && !data.isComingSoon && setIsExpanded(!isExpanded)}
+        onClick={handleNodeClick}
       >
         <div className="flex-1 space-y-1 overflow-hidden min-w-0">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -77,8 +91,8 @@ export function SimpleRoadmap({ data, depth = 0 }: SimpleRoadmapProps) {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden flex flex-col gap-3 sm:gap-4 mt-3 sm:mt-4"
           >
-            {data.children?.map((child) => (
-              <SimpleRoadmap key={child.id} data={child} depth={depth + 1} />
+            {data.children?.map((child: any) => (
+              <SimpleRoadmap key={child.id} data={child} depth={depth + 1} onSelect={onSelect} />
             ))}
           </motion.div>
         )}
